@@ -1,0 +1,71 @@
+# This is a basic workflow to help you get started with Actions
+
+name: Generate WakaTime SVG
+
+# Controls when the action will run. Triggers the workflow on push events
+on:
+  schedule:
+    - cron: 0 0 * * * # Daily at 00:00 UTC
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+concurrency:
+  group: wakatime-svg
+  cancel-in-progress: true
+
+# A workflow run is made up of one or more jobs that can run sequentially or in parallel
+jobs:
+  # This workflow contains a single job called "build"
+  build:
+    # The type of runner that the job will run on
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout (full history for branch ops)
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.14"
+          cache: "pip"
+
+      - name: Install deps
+        run: |
+          python -m pip install --upgrade pip
+          pip install requests
+
+      # Generate all statistics images
+      - name: Generate SVG
+        env:
+          WAKATIME_API_KEY: ${{ secrets.WAKATIME_API_KEY }}
+        run: |
+          mkdir -p generated
+          python scripts/generate-wakatime-svg.py > generated/wakatime.svg
+
+      # Commits all changed files to the repository
+      - name: Publish to output branch (only generated/)
+        run: |
+          set -euo pipefail
+
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+
+          # Prepare a clean worktree for output branch
+          rm -rf .worktree-output
+          git fetch origin output || true
+          git worktree add -B output .worktree-output origin/output 2>/dev/null || \
+            git worktree add -B output .worktree-output
+
+          # Replace contents with only generated artifacts
+          rm -rf .worktree-output/*
+          mkdir -p .worktree-output/generated
+          cp -f generated/wakatime.svg .worktree-output/generated/wakatime.svg
+
+          cd .worktree-output
+          git add -A
+          git commit -m "chore: update wakatime svg" || exit 0
+          git push origin output --force
