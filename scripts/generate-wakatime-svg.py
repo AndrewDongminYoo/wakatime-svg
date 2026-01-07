@@ -62,12 +62,12 @@ def main():
 
     # ---- rows HTML ----
     rows_html = []
-    for i, l in enumerate(languages):
-        raw_name = (l.get("name") or "").strip()
+    for i, lang in enumerate(languages):
+        raw_name = (lang.get("name") or "").strip()
         name = esc(raw_name)
 
-        time_text = esc(l.get("text") or "")
-        pct = clamp_pct(l.get("percent") or 0.0)
+        time_text = esc(lang.get("text") or "")
+        pct = clamp_pct(lang.get("percent") or 0.0)
         pct_text = f"{pct:.2f}%"
 
         # color lookup uses raw_name (not escaped)
