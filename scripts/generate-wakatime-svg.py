@@ -7,6 +7,7 @@ API_BASE = "https://wakatime.com/api"
 
 
 def fetch_stats(api_key: str) -> dict:
+    """Fetch WakaTime stats for the last 7 days using the API key."""
     url = f"{API_BASE}/v1/users/current/stats/last_7_days"
     r = requests.get(url, headers={"Authorization": f"Basic {api_key}"}, timeout=30)
     r.raise_for_status()
@@ -14,6 +15,7 @@ def fetch_stats(api_key: str) -> dict:
 
 
 def fetch_languages(api_key: str) -> dict:
+    """Fetch language color metadata and return a name->color mapping."""
     url = f"{API_BASE}/v1/program_languages"
     r = requests.get(url, headers={"Authorization": f"Basic {api_key}"}, timeout=30)
     r.raise_for_status()
@@ -28,10 +30,12 @@ def fetch_languages(api_key: str) -> dict:
 
 
 def esc(s: str) -> str:
+    """Escape text for safe inclusion in HTML/SVG attributes."""
     return html.escape(s or "", quote=True)
 
 
 def clamp_pct(p: float) -> float:
+    """Coerce a percentage to a finite float in the [0.0, 100.0] range."""
     try:
         p = float(p)
     except Exception:
@@ -42,6 +46,7 @@ def clamp_pct(p: float) -> float:
 
 
 def main():
+    """Render the WakaTime SVG card to stdout."""
     api_key = os.environ["WAKATIME_API_KEY"]
 
     data = fetch_stats(api_key)
