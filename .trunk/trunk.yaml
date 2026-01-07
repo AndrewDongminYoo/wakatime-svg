@@ -16,6 +16,8 @@ runtimes:
     - python@3.10.8
 # This is the section where you manage your linters. (https://docs.trunk.io/check/configuration)
 lint:
+  disabled:
+    - svgo
   enabled:
     - taplo@0.10.0
     - actionlint@1.7.10
@@ -28,7 +30,6 @@ lint:
     - osv-scanner@2.3.1
     - prettier@3.7.4
     - ruff@0.14.10
-    - svgo@4.0.0
     - trufflehog@3.92.4
     - yamllint@1.37.1
 actions:
