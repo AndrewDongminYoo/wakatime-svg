@@ -56,19 +56,10 @@ jobs:
           git config user.name "github-actions[bot]"
           git config user.email "github-actions[bot]@users.noreply.github.com"
 
-          # Prepare a clean worktree for output branch
-          rm -rf .worktree-output
-          git fetch origin output || true
-          git worktree add -B output .worktree-output origin/output 2>/dev/null || \
-            git worktree add -B output .worktree-output
-
           # Replace contents with only generated artifacts
-          rm -rf .worktree-output/*
-          mkdir -p .worktree-output/generated
-          cp -f generated/languages.svg .worktree-output/generated/languages.svg
-          cp -f generated/projects.svg .worktree-output/generated/projects.svg
+          git add generated
+          git commit -m 'chore: temp commit' || echo
 
-          cd .worktree-output
-          git add -A
-          git commit -m "chore: update wakatime svg" || exit 0
+          git checkout output 2>/dev/null || git checkout --orphan output && git rm -rf . && git checkout main -- generated/
+          git commit -m "chore: update wakatime svg" || echo
           git push origin output --force
