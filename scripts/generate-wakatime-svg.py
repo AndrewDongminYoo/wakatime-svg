@@ -56,6 +56,9 @@ def main():
     language_colors = fetch_languages(api_key)
 
     total_text = esc(data.get("human_readable_total_including_other_language", ""))
+    total_text = total_text.replace("hr", "hour")
+    total_text = total_text.replace("min", "minute")
+
     title = f"WakaTime (last 7 days) · {total_text}"
 
     # ---- layout: card-like ----
@@ -85,17 +88,17 @@ def main():
 
         rows_html.append(
             f"""
-            <li class="row" style="animation-delay:{i * 150}ms;">
-              <span class="dot" style="background:{color};"></span>
-              <span class="lang" title="{name}">{name}</span>
-              <span class="time" title="{time_text}">{time_text}</span>
-              <span class="bar">
-                <span class="bar-background">
-                  <span class="bar-fill" style="width:{percent:.4f}%; background:{color};"></span>
-                </span>
-              </span>
-              <span class="percent">{percent_text}</span>
-            </li>
+        <li class="row" style="animation-delay:{i * 150}ms;">
+          <span class="dot" style="background:{color};"></span>
+          <span class="lang" title="{name}">{name}</span>
+          <span class="time" title="{time_text}">{time_text}</span>
+          <span class="bar">
+            <span class="bar-background">
+              <span class="bar-fill" style="width:{percent:.4f}%; background:{color};"></span>
+            </span>
+          </span>
+          <span class="percent">{percent_text}</span>
+        </li>
             """.strip()
         )
 
@@ -110,11 +113,11 @@ def main():
     }}
 
     #background {{
+      width: calc(100% - 10px);
+      height: calc(100% - 10px);
       fill: #00000000;
       stroke: #8B8B8B22;
       stroke-width: 1px;
-      rx: {rect_size}px;
-      ry: {rect_size}px;
     }}
 
     foreignObject {{
@@ -212,9 +215,9 @@ def main():
     }}
   </style>
 
-  <rect x="{rect_size}" y="{rect_size}" width="{width - rect_size * 2}" height="{height - rect_size * 2}" id="background" />
+  <rect x="{rect_size}" y="{rect_size}" id="background" />
 
-  <foreignObject x="{w_padding}" y="{h_padding}">
+  <foreignObject x="{w_padding}" y="{h_padding}" width="{width - w_padding * 2}" height="{height - h_padding * 2}">
     <div xmlns="http://www.w3.org/1999/xhtml" class="wrap">
       <h2>{esc(title)}</h2>
       <ul id="rows">
@@ -222,8 +225,7 @@ def main():
       </ul>
     </div>
   </foreignObject>
-</svg>
-"""
+</svg>"""
     print(svg)
 
 
