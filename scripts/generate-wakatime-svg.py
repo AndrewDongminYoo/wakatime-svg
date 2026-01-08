@@ -89,12 +89,12 @@ def main():
         rows_html.append(
             f"""
         <li class="row" style="animation-delay:{i * 150}ms;">
-          <span class="dot" style="background:{color};"></span>
+          <span class="dot" style="background:{color};"/>
           <span class="lang" title="{name}">{name}</span>
           <span class="time" title="{time_text}">{time_text}</span>
           <span class="bar">
             <span class="bar-background">
-              <span class="bar-fill" style="width:{percent:.4f}%; background:{color};"></span>
+              <span class="bar-fill" style="width:{percent:.4f}%; background:{color};"/>
             </span>
           </span>
           <span class="percent">{percent_text}</span>
@@ -102,7 +102,7 @@ def main():
             """.strip()
         )
 
-    list_html = "\n".join(rows_html)
+    list_html = "\n        ".join(rows_html)
 
     svg = f"""<svg xmlns="http://www.w3.org/2000/svg" width="{width}" height="{height}">
   <style>
@@ -215,7 +215,7 @@ def main():
     }}
   </style>
 
-  <rect x="{rect_size}" y="{rect_size}" id="background" />
+  <rect id="background" x="{rect_size}" y="{rect_size}" rx="{rect_size}" ry="{rect_size}" width="{width - rect_size * 2}" height="{height - rect_size * 2}" fill="none" stroke="#8B8B8B22" stroke-width="1"/>
 
   <foreignObject x="{w_padding}" y="{h_padding}" width="{width - w_padding * 2}" height="{height - h_padding * 2}">
     <div xmlns="http://www.w3.org/1999/xhtml" class="wrap">
