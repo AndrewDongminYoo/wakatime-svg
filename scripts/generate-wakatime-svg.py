@@ -150,16 +150,19 @@ def build_project_rows(items: list[dict]) -> str:
 
 def render_svg(title: str, rows_html: str, row_count: int) -> str:
     """Render a single SVG card with the provided rows."""
-    width = 360
+    card_width = 360
+    outer_padding = 12
     header_h = 28  # h2 line-height-ish
-    rect_size = 6
+    rect_radius = 6
     w_padding = 16
     h_padding = 12
     gap_after_header = 10
     row_h = 26
-    height = (
+    card_height = (
         w_padding + h_padding + header_h + gap_after_header + row_count * row_h + 10
     )
+    svg_width = card_width + outer_padding * 2
+    svg_height = card_height + outer_padding * 2
 
     list_html = f"""
       <ul class="rows">
@@ -167,7 +170,7 @@ def render_svg(title: str, rows_html: str, row_count: int) -> str:
       </ul>
     """.strip()
 
-    svg = f"""<svg xmlns="http://www.w3.org/2000/svg" width="{width}" height="{height}">
+    svg = f"""<svg xmlns="http://www.w3.org/2000/svg" width="{svg_width}" height="{svg_height}">
   <style>
     svg {{
       font-family: -apple-system, BlinkMacSystemFont, Segoe UI, Helvetica, Arial, sans-serif, Apple Color Emoji, Segoe UI Emoji;
@@ -176,16 +179,14 @@ def render_svg(title: str, rows_html: str, row_count: int) -> str:
     }}
 
     #background {{
-      width: calc(100% - 10px);
-      height: calc(100% - 10px);
       fill: #00000000;
       stroke: #8B8B8B22;
       stroke-width: 1px;
     }}
 
     foreignObject {{
-      width: {width - w_padding * 2}px;
-      height: {height - h_padding * 2}px;
+      width: {card_width - w_padding * 2}px;
+      height: {card_height - h_padding * 2}px;
     }}
 
     .wrap {{
@@ -310,9 +311,9 @@ def render_svg(title: str, rows_html: str, row_count: int) -> str:
     }}
   </style>
 
-  <rect id="background" x="{rect_size}" y="{rect_size}" rx="{rect_size}" ry="{rect_size}" width="{width - rect_size * 2}" height="{height - rect_size * 2}" fill="none" stroke="#8B8B8B22" stroke-width="1"/>
+  <rect id="background" x="{outer_padding}" y="{outer_padding}" rx="{rect_radius}" ry="{rect_radius}" width="{card_width}" height="{card_height}" fill="none" stroke="#8B8B8B22" stroke-width="1"/>
 
-  <foreignObject x="{w_padding}" y="{h_padding}" width="{width - w_padding * 2}" height="{height - h_padding * 2}">
+  <foreignObject x="{outer_padding + w_padding}" y="{outer_padding + h_padding}" width="{card_width - w_padding * 2}" height="{card_height - h_padding * 2}">
     <div xmlns="http://www.w3.org/1999/xhtml" class="wrap">
       <h2>{esc(title)}</h2>
       {list_html}
