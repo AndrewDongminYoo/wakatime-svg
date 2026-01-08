@@ -2,11 +2,12 @@
 
 ![Repository banner](assets/banner.png)
 
-Generate an SVG card from WakaTime stats for the last 7 days. GitHub Actions refreshes the SVG daily and publishes the artifact to the `output` branch.
+Generate SVG cards from WakaTime stats for the last 7 days. GitHub Actions refreshes the SVGs daily and publishes the artifacts to the `output` branch.
 
 ## Key Features
 
 - Visualizes the top 5 languages by time and percentage
+- Visualizes the top 5 projects by time, with AI vs human code ratios
 - Language color mapping with percentage bars
 - Daily scheduled refresh (00:00 UTC)
 
@@ -21,28 +22,31 @@ Generate an SVG card from WakaTime stats for the last 7 days. GitHub Actions ref
    ```bash
    export WAKATIME_API_KEY=YOUR_KEY
    ```
-4. Generate SVG
+4. Generate SVGs
    ```bash
    mkdir -p generated
-   python scripts/generate-wakatime-svg.py > generated/wakatime.svg
+   python scripts/generate-wakatime-svg.py
    ```
+   Output: `generated/languages.svg`, `generated/projects.svg`
 
 ## GitHub Actions Setup
 
 1. Add `WAKATIME_API_KEY` to repository Secrets
 2. Enable Actions for the repo
 3. Run the `Generate WakaTime SVG` workflow manually or wait for the schedule
-4. Confirm `generated/wakatime.svg` appears on the `output` branch
+4. Confirm `generated/languages.svg` and `generated/projects.svg` appear on the `output` branch
 
 ## Embed in README
 
-Use the SVG published on the `output` branch.
+Use the SVGs published on the `output` branch.
 
 ```md
-![WakaTime](https://raw.githubusercontent.com/<USER>/<REPO>/output/generated/wakatime.svg)
+![WakaTime Languages](https://raw.githubusercontent.com/<USER>/<REPO>/output/generated/languages.svg)
+![WakaTime Projects](https://raw.githubusercontent.com/<USER>/<REPO>/output/generated/projects.svg)
 ```
 
-![WakaTime](https://raw.githubusercontent.com/AndrewDongminYoo/wakatime-svg/output/generated/wakatime.svg)
+![WakaTime Languages](https://raw.githubusercontent.com/AndrewDongminYoo/wakatime-svg/output/generated/languages.svg)
+![WakaTime Projects](https://raw.githubusercontent.com/AndrewDongminYoo/wakatime-svg/output/generated/projects.svg)
 
 ## Marketplace Submission Notes
 

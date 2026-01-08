@@ -2,15 +2,15 @@
 
 ## Project Structure & Module Organization
 
-- `scripts/generate-wakatime-svg.py` is the main entrypoint that fetches WakaTime stats and renders the SVG card.
-- `.github/workflows/wakatime-svg.yml` runs the daily GitHub Actions job that generates and publishes the SVG.
+- `scripts/generate-wakatime-svg.py` is the main entrypoint that fetches WakaTime stats and renders the SVG cards.
+- `.github/workflows/wakatime-svg.yml` runs the daily GitHub Actions job that generates and publishes the SVGs.
 - `templates/` is reserved for SVG/HTML snippets (currently empty).
-- `generated/` is the runtime output folder created by local runs or CI and contains `generated/wakatime.svg`.
+- `generated/` is the runtime output folder created by local runs or CI and contains `generated/languages.svg` and `generated/projects.svg`.
 
 ## Build, Test, and Development Commands
 
 - `python -m pip install requests` installs the only runtime dependency.
-- `WAKATIME_API_KEY=... python scripts/generate-wakatime-svg.py > generated/wakatime.svg` generates the SVG locally.
+- `WAKATIME_API_KEY=... python scripts/generate-wakatime-svg.py` generates the SVGs locally.
 - `trunk fmt` formats code; `trunk check` runs linters (Black, isort, ruff, etc.) as configured in `.trunk/trunk.yaml`.
 
 ## Coding Style & Naming Conventions

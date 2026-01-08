@@ -6,7 +6,12 @@ import re
 import requests
 
 API_BASE = "https://wakatime.com/api"
+AI_BAR_COLOR = "#f5b35f"
 DEFAULT_BAR_COLOR = "#d0d7de"
+HUMAN_BAR_COLOR = "#5aa9ff"
+LANGUAGES_SVG_NAME = "languages.svg"
+OUTPUT_DIR = "generated"
+PROJECTS_SVG_NAME = "projects.svg"
 TOP_N_COUNT = 5
 
 
@@ -49,48 +54,46 @@ def clamp_pct(p: float) -> float:
     return max(0.0, min(100.0, p))
 
 
-def main():
-    """Render the WakaTime SVG card to stdout."""
-    api_key = os.environ["WAKATIME_API_KEY"]
+def compact_time_text(text: str) -> str:
+    """Shorten WakaTime duration labels for the compact layout."""
+    text = esc(text or "")
+    return re.sub(r"([a-z])\w+", r"\g<1>", text, flags=re.IGNORECASE)
 
-    data = fetch_stats(api_key)
-    languages = (data.get("languages") or [])[:TOP_N_COUNT]
-    language_colors = fetch_languages(api_key)
 
-    total_text = esc(data.get("human_readable_total_including_other_language", ""))
-    total_text = total_text.replace("hr", "hour")
-    total_text = total_text.replace("min", "minute")
+def ai_human_ratio(item: dict) -> tuple[float, float]:
+    """Return AI and human percentages based on additions+deletions."""
+    ai_additions = float(item.get("ai_additions") or 0)
+    ai_deletions = float(item.get("ai_deletions") or 0)
+    human_additions = float(item.get("human_additions") or 0)
+    human_deletions = float(item.get("human_deletions") or 0)
 
-    title = f"WakaTime (last 7 days) · {total_text}"
+    ai_total = max(0.0, ai_additions + ai_deletions)
+    human_total = max(0.0, human_additions + human_deletions)
+    total = ai_total + human_total
+    if total <= 0:
+        return 0.0, 100.0
 
-    # ---- layout: card-like ----
-    width = 360
-    header_h = 28  # h2 line-height-ish
-    rect_size = 6
-    w_padding = 16
-    h_padding = 12
-    gap_after_header = 10
-    row_h = 26
-    rows = len(languages)  # rows <= TOP_N_COUNT
-    height = w_padding + h_padding + header_h + gap_after_header + rows * row_h + 10
+    ai_pct = clamp_pct(ai_total / total * 100.0)
+    human_pct = clamp_pct(100.0 - ai_pct)
+    return ai_pct, human_pct
 
-    # ---- rows HTML ----
+
+def build_language_rows(items: list[dict], colors: dict[str, str]) -> str:
+    """Build the HTML list items for the language stats."""
     rows_html = []
-    for i, lang in enumerate(languages):
-        raw_name = (lang.get("name") or "").strip()
+    for i, item in enumerate(items):
+        raw_name = (item.get("name") or "").strip()
         name = esc(raw_name)
 
-        time_text = esc(lang.get("text") or "")
-        time_text = re.sub(r"([a-z])\w+", r"\g<1>", time_text, flags=re.IGNORECASE)
-        percent = clamp_pct(lang.get("percent") or 0.0)
+        time_text = compact_time_text(item.get("text") or "")
+        percent = clamp_pct(item.get("percent") or 0.0)
         percent_text = f"{percent:.0f}%"
 
-        # color lookup uses raw_name (not escaped)
-        color = esc(language_colors.get(raw_name, "#d0d7de"))
+        color = esc(colors.get(raw_name, DEFAULT_BAR_COLOR))
 
         rows_html.append(
             f"""
-        <li class="row" style="animation-delay:{i * 150}ms;">
+        <li class="row language" style="animation-delay:{i * 150}ms;">
           <span class="dot" style="background:{color};"/>
           <span class="lang" title="{name}">{name}</span>
           <span class="time" title="{time_text}">{time_text}</span>
@@ -100,11 +103,62 @@ def main():
             </span>
           </span>
           <span class="percent">{percent_text}</span>
-        </li>
-            """.strip()
+        </li>""".strip()
         )
 
-    list_html = "\n        ".join(rows_html)
+    return "\n".join(rows_html)
+
+
+def build_project_rows(items: list[dict]) -> str:
+    """Build the HTML list items for the project stats."""
+    rows_html = []
+    for i, item in enumerate(items):
+        raw_name = (item.get("name") or "").strip()
+        name = esc(raw_name)
+
+        time_text = compact_time_text(item.get("text") or "")
+        percent = clamp_pct(item.get("percent") or 0.0)
+        percent_text = f"{percent:.0f}%"
+
+        ai_pct, human_pct = ai_human_ratio(item)
+        bar_title = esc(f"Human {human_pct:.0f}% / AI {ai_pct:.0f}%")
+
+        rows_html.append(
+            f"""
+        <li class="row project" style="animation-delay:{i * 150}ms;">
+          <span class="lang" title="{name}">{name}</span>
+          <span class="time" title="{time_text}">{time_text}</span>
+          <span class="bar" title="{bar_title}">
+            <span class="bar-background">
+              <span class="bar-human" style="width:{human_pct:.4f}%;"></span>
+              <span class="bar-ai" style="width:{ai_pct:.4f}%;"></span>
+            </span>
+          </span>
+          <span class="percent">{percent_text}</span>
+        </li>""".strip()
+        )
+
+    return "\n".join(rows_html)
+
+
+def render_svg(title: str, rows_html: str, row_count: int) -> str:
+    """Render a single SVG card with the provided rows."""
+    width = 360
+    header_h = 28  # h2 line-height-ish
+    rect_size = 6
+    w_padding = 16
+    h_padding = 12
+    gap_after_header = 10
+    row_h = 26
+    height = (
+        w_padding + h_padding + header_h + gap_after_header + row_count * row_h + 10
+    )
+
+    list_html = f"""
+      <ul class="rows">
+        {rows_html}
+      </ul>
+    """.strip()
 
     svg = f"""<svg xmlns="http://www.w3.org/2000/svg" width="{width}" height="{height}">
   <style>
@@ -143,7 +197,7 @@ def main():
       color: rgb(72, 148, 224);
     }}
 
-    #rows {{
+    .rows {{
       list-style: none;
       padding: 0;
       margin: 0;
@@ -151,7 +205,6 @@ def main():
 
     .row {{
       display: grid;
-      grid-template-columns: 5px 70px 75px 1fr 32px;
       gap: 10px;
       align-items: center;
       height: {row_h}px;
@@ -161,6 +214,14 @@ def main():
       animation-duration: 1s;
       animation-function: ease-in-out;
       animation-fill-mode: forwards;
+    }}
+
+    .row.language {{
+      grid-template-columns: 5px 70px 75px 1fr 32px;
+    }}
+
+    .row.project {{
+      grid-template-columns: 70px 75px 1fr 32px;
     }}
 
     @keyframes slideIn {{
@@ -202,7 +263,7 @@ def main():
     }}
 
     .bar-background {{
-      display: block;
+      display: flex;
       height: 8px;
       border-radius: 999px;
       background: #8B8B8B22;
@@ -214,6 +275,22 @@ def main():
       height: 100%;
       border-radius: 999px;
       opacity: 0.9;
+      flex: 0 0 auto;
+    }}
+
+    .bar-human,
+    .bar-ai {{
+      display: block;
+      height: 100%;
+      flex: 0 0 auto;
+    }}
+
+    .bar-human {{
+      background: {HUMAN_BAR_COLOR};
+    }}
+
+    .bar-ai {{
+      background: {AI_BAR_COLOR};
     }}
   </style>
 
@@ -222,13 +299,46 @@ def main():
   <foreignObject x="{w_padding}" y="{h_padding}" width="{width - w_padding * 2}" height="{height - h_padding * 2}">
     <div xmlns="http://www.w3.org/1999/xhtml" class="wrap">
       <h2>{esc(title)}</h2>
-      <ul id="rows">
-        {list_html}
-      </ul>
+      {list_html}
     </div>
   </foreignObject>
 </svg>"""
-    print(svg)
+    return svg
+
+
+def write_svg(path: str, content: str) -> None:
+    """Write SVG content to disk, creating the parent directory."""
+    dir_path = os.path.dirname(path)
+    if dir_path:
+        os.makedirs(dir_path, exist_ok=True)
+    with open(path, "w", encoding="utf-8") as handle:
+        handle.write(content)
+
+
+def main():
+    """Render the WakaTime SVG cards to disk."""
+    api_key = os.environ["WAKATIME_API_KEY"]
+
+    data = fetch_stats(api_key)
+    languages = (data.get("languages") or [])[:TOP_N_COUNT]
+    projects = (data.get("projects") or [])[:TOP_N_COUNT]
+    language_colors = fetch_languages(api_key)
+
+    total_text = data.get("human_readable_total_including_other_language") or ""
+    total_text = total_text.replace("hr", "hour")
+    total_text = total_text.replace("min", "minute")
+
+    languages_title = f"WakaTime Languages (last 7 days) · {total_text}"
+    projects_title = f"WakaTime Projects (last 7 days) · {total_text}"
+
+    languages_rows = build_language_rows(languages, language_colors)
+    projects_rows = build_project_rows(projects)
+
+    languages_svg = render_svg(languages_title, languages_rows, len(languages))
+    projects_svg = render_svg(projects_title, projects_rows, len(projects))
+
+    write_svg(os.path.join(OUTPUT_DIR, LANGUAGES_SVG_NAME), languages_svg)
+    write_svg(os.path.join(OUTPUT_DIR, PROJECTS_SVG_NAME), projects_svg)
 
 
 if __name__ == "__main__":

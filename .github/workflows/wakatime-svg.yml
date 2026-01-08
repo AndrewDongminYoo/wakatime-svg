@@ -46,7 +46,7 @@ jobs:
           WAKATIME_API_KEY: ${{ secrets.WAKATIME_API_KEY }}
         run: |
           mkdir -p generated
-          python scripts/generate-wakatime-svg.py > generated/wakatime.svg
+          python scripts/generate-wakatime-svg.py
 
       # Commits all changed files to the repository
       - name: Publish to output branch (only generated/)
@@ -65,7 +65,8 @@ jobs:
           # Replace contents with only generated artifacts
           rm -rf .worktree-output/*
           mkdir -p .worktree-output/generated
-          cp -f generated/wakatime.svg .worktree-output/generated/wakatime.svg
+          cp -f generated/languages.svg .worktree-output/generated/languages.svg
+          cp -f generated/projects.svg .worktree-output/generated/projects.svg
 
           cd .worktree-output
           git add -A
