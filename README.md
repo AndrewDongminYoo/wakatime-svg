@@ -7,7 +7,7 @@ Generate SVG cards from WakaTime stats for the last 7 days. GitHub Actions refre
 ## Key Features
 
 - Visualizes the top 5 languages by time and percentage
-- Visualizes the top 5 projects by time, with AI vs human code ratios
+- Visualizes the top 5 projects by time, with additions vs deletions ratios
 - Language color mapping with percentage bars
 - Daily scheduled refresh (00:00 UTC)
 

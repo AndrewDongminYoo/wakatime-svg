@@ -12,9 +12,9 @@ import re
 import requests
 
 API_BASE = "https://wakatime.com/api"
-AI_BAR_COLOR = "#f5b35f"
+ADDITIONS_BAR_COLOR = "#79b4ff"
 DEFAULT_BAR_COLOR = "#d0d7de"
-HUMAN_BAR_COLOR = "#5aa9ff"
+DELETIONS_BAR_COLOR = "#5f93d6"
 LANGUAGES_SVG_NAME = "languages.svg"
 OUTPUT_DIR = "generated"
 PROJECTS_SVG_NAME = "projects.svg"
@@ -70,22 +70,22 @@ def compact_time_text(text: str) -> str:
     return esc(shorten_time_label(text))
 
 
-def ai_human_ratio(item: dict) -> tuple[float, float]:
-    """Return AI and human percentages based on additions+deletions."""
+def additions_deletions_ratio(item: dict) -> tuple[float, float]:
+    """Return additions vs deletions percentages based on change totals."""
     ai_additions = float(item.get("ai_additions") or 0)
     ai_deletions = float(item.get("ai_deletions") or 0)
     human_additions = float(item.get("human_additions") or 0)
     human_deletions = float(item.get("human_deletions") or 0)
 
-    ai_total = max(0.0, ai_additions + ai_deletions)
-    human_total = max(0.0, human_additions + human_deletions)
-    total = ai_total + human_total
+    additions = max(0.0, human_additions + ai_additions)
+    deletions = max(0.0, human_deletions + ai_deletions)
+    total = additions + deletions
     if total <= 0:
-        return 0.0, 100.0
+        return 0.0, 0.0
 
-    ai_pct = clamp_pct(ai_total / total * 100.0)
-    human_pct = clamp_pct(100.0 - ai_pct)
-    return ai_pct, human_pct
+    additions_pct = clamp_pct(additions / total * 100.0)
+    deletions_pct = clamp_pct(100.0 - additions_pct)
+    return additions_pct, deletions_pct
 
 
 def build_language_rows(items: list[dict], colors: dict[str, str]) -> str:
@@ -128,8 +128,10 @@ def build_project_rows(items: list[dict]) -> str:
 
         time_text = compact_time_text(item.get("text") or "")
 
-        ai_pct, human_pct = ai_human_ratio(item)
-        bar_title = esc(f"Human {human_pct:.0f}% / AI {ai_pct:.0f}%")
+        additions_pct, deletions_pct = additions_deletions_ratio(item)
+        bar_title = esc(
+            f"Additions {additions_pct:.0f}% / Deletions {deletions_pct:.0f}%"
+        )
 
         rows_html.append(
             f"""
@@ -137,8 +139,8 @@ def build_project_rows(items: list[dict]) -> str:
           <span class="lang" title="{name}">{name}</span>
           <span class="bar" title="{bar_title}">
             <span class="bar-background">
-              <span class="bar-human" style="width:{human_pct:.4f}%;"></span>
-              <span class="bar-ai" style="width:{ai_pct:.4f}%;"></span>
+              <span class="bar-additions" style="width:{additions_pct:.4f}%;"></span>
+              <span class="bar-deletions" style="width:{deletions_pct:.4f}%;"></span>
             </span>
           </span>
           <span class="time project-time" title="{time_text}">{time_text}</span>
@@ -294,19 +296,19 @@ def render_svg(title: str, rows_html: str, row_count: int) -> str:
       flex: 0 0 auto;
     }}
 
-    .bar-human,
-    .bar-ai {{
+    .bar-additions,
+    .bar-deletions {{
       display: block;
       height: 100%;
       flex: 0 0 auto;
     }}
 
-    .bar-human {{
-      background: {HUMAN_BAR_COLOR};
+    .bar-additions {{
+      background: {ADDITIONS_BAR_COLOR};
     }}
 
-    .bar-ai {{
-      background: {AI_BAR_COLOR};
+    .bar-deletions {{
+      background: {DELETIONS_BAR_COLOR};
     }}
   </style>
 
