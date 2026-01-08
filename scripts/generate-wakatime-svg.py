@@ -12,9 +12,9 @@ import re
 import requests
 
 API_BASE = "https://wakatime.com/api"
-ADDITIONS_BAR_COLOR = "#79b4ff"
+ADDITIONS_BAR_COLOR = "#23d18b"
 DEFAULT_BAR_COLOR = "#d0d7de"
-DELETIONS_BAR_COLOR = "#5f93d6"
+DELETIONS_BAR_COLOR = "#f37c7c"
 LANGUAGES_SVG_NAME = "languages.svg"
 OUTPUT_DIR = "generated"
 PROJECTS_SVG_NAME = "projects.svg"
@@ -116,7 +116,7 @@ def build_language_rows(items: list[dict], colors: dict[str, str]) -> str:
         </li>""".strip()
         )
 
-    return "\n".join(rows_html)
+    return "\n        ".join(rows_html)
 
 
 def build_project_rows(items: list[dict]) -> str:
@@ -129,9 +129,7 @@ def build_project_rows(items: list[dict]) -> str:
         time_text = compact_time_text(item.get("text") or "")
 
         additions_pct, deletions_pct = additions_deletions_ratio(item)
-        bar_title = esc(
-            f"Additions {additions_pct:.0f}% / Deletions {deletions_pct:.0f}%"
-        )
+        bar_title = esc(f"+ {additions_pct:.0f}% / - {deletions_pct:.0f}%")
 
         rows_html.append(
             f"""
@@ -147,7 +145,7 @@ def build_project_rows(items: list[dict]) -> str:
         </li>""".strip()
         )
 
-    return "\n".join(rows_html)
+    return "\n        ".join(rows_html)
 
 
 def render_svg(title: str, rows_html: str, row_count: int) -> str:
@@ -347,7 +345,7 @@ def main():
     total_text = total_text.replace("min", "minute")
 
     languages_title = f"Languages · {total_text}"
-    projects_title = f"Projects · {total_text}"
+    projects_title = f"Projects (+/-) · {total_text}"
 
     languages_rows = build_language_rows(languages, language_colors)
     projects_rows = build_project_rows(projects)
