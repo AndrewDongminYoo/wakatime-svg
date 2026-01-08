@@ -16,9 +16,109 @@ ADDITIONS_BAR_COLOR = "#23d18b"
 DEFAULT_BAR_COLOR = "#d0d7de"
 DELETIONS_BAR_COLOR = "#f37c7c"
 LANGUAGES_SVG_NAME = "languages.svg"
-OUTPUT_DIR = "generated"
 PROJECTS_SVG_NAME = "projects.svg"
-TOP_N_COUNT = 5
+
+DEFAULT_OUTPUT_DIR = "generated"
+DEFAULT_TOP_N_COUNT = 5
+DEFAULT_CHART_WIDTH = 360
+DEFAULT_HEADER_HEIGHT = 28
+DEFAULT_ROW_HEIGHT = 26
+DEFAULT_RECT_RADIUS = 6
+DEFAULT_OUTER_PADDING = 12
+DEFAULT_PADDING_X = 16
+DEFAULT_PADDING_Y = 12
+DEFAULT_GAP_AFTER_HEADER = 10
+DEFAULT_DOT_COL_WIDTH = 5
+DEFAULT_PERCENT_COL_WIDTH = 32
+DEFAULT_NAME_COL_WIDTH = 70
+DEFAULT_DURATION_COL_WIDTH = 75
+DEFAULT_PROJECT_NAME_COL_WIDTH = 120
+DEFAULT_PROJECT_DURATION_COL_WIDTH = 54
+DEFAULT_BAR_HEIGHT = 8
+
+
+def env_str(name: str, default: str) -> str:
+    """Read a string environment variable with fallback."""
+    value = os.getenv(name)
+    if value is None:
+        return default
+    value = value.strip()
+    return value or default
+
+
+def env_int(name: str, default: int, minimum: int | None = None) -> int:
+    """Read an integer environment variable with optional minimum clamp."""
+    value = os.getenv(name)
+    if value is None or value.strip() == "":
+        return default
+    try:
+        parsed = int(float(value))
+    except (TypeError, ValueError):
+        return default
+    if minimum is not None:
+        parsed = max(minimum, parsed)
+    return parsed
+
+
+def env_has_value(name: str) -> bool:
+    """Return True if the environment variable is set to a non-empty value."""
+    value = os.getenv(name)
+    return value is not None and value.strip() != ""
+
+
+def env_bool(name: str, default: bool) -> bool:
+    """Read a boolean environment variable."""
+    value = os.getenv(name)
+    if value is None or value.strip() == "":
+        return default
+    normalized = value.strip().lower()
+    if normalized in {"1", "true", "yes", "y", "on"}:
+        return True
+    if normalized in {"0", "false", "no", "n", "off"}:
+        return False
+    return default
+
+
+def load_chart_config() -> dict[str, int | bool]:
+    """Load chart layout settings from environment variables."""
+    name_width = env_int(
+        "WAKATIME_CHART_COL_NAME_WIDTH", DEFAULT_NAME_COL_WIDTH, minimum=40
+    )
+    duration_width = env_int(
+        "WAKATIME_CHART_COL_DURATION_WIDTH", DEFAULT_DURATION_COL_WIDTH, minimum=32
+    )
+    project_name_width = DEFAULT_PROJECT_NAME_COL_WIDTH
+    project_duration_width = DEFAULT_PROJECT_DURATION_COL_WIDTH
+    if env_has_value("WAKATIME_CHART_COL_NAME_WIDTH"):
+        project_name_width = name_width
+    if env_has_value("WAKATIME_CHART_COL_DURATION_WIDTH"):
+        project_duration_width = duration_width
+
+    return {
+        "width": env_int("WAKATIME_CHART_WIDTH", DEFAULT_CHART_WIDTH, minimum=120),
+        "height": env_int("WAKATIME_CHART_HEIGHT", 0, minimum=0),
+        "row_height": env_int(
+            "WAKATIME_CHART_BAR_HEIGHT", DEFAULT_ROW_HEIGHT, minimum=16
+        ),
+        "bar_height": env_int(
+            "WAKATIME_CHART_BAR_HEIGHT", DEFAULT_BAR_HEIGHT, minimum=4
+        ),
+        "outer_padding": env_int(
+            "WAKATIME_CHART_PADDING", DEFAULT_OUTER_PADDING, minimum=0
+        ),
+        "padding_x": env_int("WAKATIME_CHART_MARGIN_X", DEFAULT_PADDING_X, minimum=0),
+        "padding_y": env_int("WAKATIME_CHART_MARGIN_Y", DEFAULT_PADDING_Y, minimum=0),
+        "rect_radius": DEFAULT_RECT_RADIUS,
+        "header_height": DEFAULT_HEADER_HEIGHT,
+        "gap_after_header": DEFAULT_GAP_AFTER_HEADER,
+        "col_dot_width": DEFAULT_DOT_COL_WIDTH,
+        "col_percent_width": DEFAULT_PERCENT_COL_WIDTH,
+        "col_name_width": name_width,
+        "col_duration_width": duration_width,
+        "project_name_width": project_name_width,
+        "project_duration_width": project_duration_width,
+        "dynamic_height": env_bool("WAKATIME_CHART_DYNAMIC_HEIGHT", True),
+    }
 
 
 def fetch_stats(api_key: str) -> dict:
@@ -148,21 +248,36 @@ def build_project_rows(items: list[dict]) -> str:
     return "\n        ".join(rows_html)
 
 
-def render_svg(title: str, rows_html: str, row_count: int) -> str:
+def render_svg(title: str, rows_html: str, row_count: int, config: dict) -> str:
     """Render a single SVG card with the provided rows."""
-    card_width = 360
-    outer_padding = 12
-    header_h = 28  # h2 line-height-ish
-    rect_radius = 6
-    w_padding = 16
-    h_padding = 12
-    gap_after_header = 10
-    row_h = 26
-    card_height = (
+    card_width = int(config["width"])
+    outer_padding = int(config["outer_padding"])
+    header_h = int(config["header_height"])  # h2 line-height-ish
+    rect_radius = int(config["rect_radius"])
+    w_padding = int(config["padding_x"])
+    h_padding = int(config["padding_y"])
+    gap_after_header = int(config["gap_after_header"])
+    row_h = int(config["row_height"])
+    bar_h = min(int(config["bar_height"]), row_h)
+    name_w = int(config["col_name_width"])
+    duration_w = int(config["col_duration_width"])
+    project_name_w = int(config["project_name_width"])
+    project_duration_w = int(config["project_duration_width"])
+    dot_w = int(config["col_dot_width"])
+    percent_w = int(config["col_percent_width"])
+    dynamic_height = bool(config["dynamic_height"])
+
+    computed_height = (
         w_padding + h_padding + header_h + gap_after_header + row_count * row_h + 10
+    )
+    explicit_height = int(config["height"])
+    card_height = (
+        computed_height if dynamic_height or explicit_height <= 0 else explicit_height
     )
     svg_width = card_width + outer_padding * 2
     svg_height = card_height + outer_padding * 2
+    inner_width = max(1, card_width - w_padding * 2)
+    inner_height = max(1, card_height - h_padding * 2)
 
     list_html = f"""
       <ul class="rows">
@@ -173,7 +288,15 @@ def render_svg(title: str, rows_html: str, row_count: int) -> str:
     svg = f"""<svg xmlns="http://www.w3.org/2000/svg" width="{svg_width}" height="{svg_height}">
   <style>
     svg {{
-      font-family: -apple-system, BlinkMacSystemFont, Segoe UI, Helvetica, Arial, sans-serif, Apple Color Emoji, Segoe UI Emoji;
+      font-family:
+        -apple-system,
+        BlinkMacSystemFont,
+        Segoe UI,
+        Helvetica,
+        Arial,
+        sans-serif,
+        Apple Color Emoji,
+        Segoe UI Emoji;
       font-size: 14px;
       line-height: 21px;
     }}
@@ -185,8 +308,8 @@ def render_svg(title: str, rows_html: str, row_count: int) -> str:
     }}
 
     foreignObject {{
-      width: {card_width - w_padding * 2}px;
-      height: {card_height - h_padding * 2}px;
+      width: {inner_width}px;
+      height: {inner_height}px;
     }}
 
     .wrap {{
@@ -228,11 +351,11 @@ def render_svg(title: str, rows_html: str, row_count: int) -> str:
     }}
 
     .row.language {{
-      grid-template-columns: 5px 70px 75px 1fr 32px;
+      grid-template-columns: {dot_w}px {name_w}px {duration_w}px 1fr {percent_w}px;
     }}
 
     .row.project {{
-      grid-template-columns: minmax(120px, 1.3fr) 1fr 54px;
+      grid-template-columns: minmax({project_name_w}px, 1.3fr) 1fr {project_duration_w}px;
     }}
 
     @keyframes slideIn {{
@@ -281,7 +404,7 @@ def render_svg(title: str, rows_html: str, row_count: int) -> str:
 
     .bar-background {{
       display: flex;
-      height: 8px;
+      height: {bar_h}px;
       border-radius: 999px;
       background: #8B8B8B22;
       overflow: hidden;
@@ -311,9 +434,25 @@ def render_svg(title: str, rows_html: str, row_count: int) -> str:
     }}
   </style>
 
-  <rect id="background" x="{outer_padding}" y="{outer_padding}" rx="{rect_radius}" ry="{rect_radius}" width="{card_width}" height="{card_height}" fill="none" stroke="#8B8B8B22" stroke-width="1"/>
+  <rect
+    id="background"
+    x="{outer_padding}"
+    y="{outer_padding}"
+    rx="{rect_radius}"
+    ry="{rect_radius}"
+    width="{card_width}"
+    height="{card_height}"
+    fill="none"
+    stroke="#8B8B8B22"
+    stroke-width="1"
+  />
 
-  <foreignObject x="{outer_padding + w_padding}" y="{outer_padding + h_padding}" width="{card_width - w_padding * 2}" height="{card_height - h_padding * 2}">
+  <foreignObject
+    x="{outer_padding + w_padding}"
+    y="{outer_padding + h_padding}"
+    width="{inner_width}"
+    height="{inner_height}"
+  >
     <div xmlns="http://www.w3.org/1999/xhtml" class="wrap">
       <h2>{esc(title)}</h2>
       {list_html}
@@ -335,10 +474,13 @@ def write_svg(path: str, content: str) -> None:
 def main():
     """Render the WakaTime SVG cards to disk."""
     api_key = os.environ["WAKATIME_API_KEY"]
+    config = load_chart_config()
+    lang_limit = env_int("WAKATIME_LANG_LIMIT", DEFAULT_TOP_N_COUNT, minimum=1)
+    output_dir = env_str("IMAGES_FOLDER", DEFAULT_OUTPUT_DIR)
 
     data = fetch_stats(api_key)
-    languages = (data.get("languages") or [])[:TOP_N_COUNT]
-    projects = (data.get("projects") or [])[:TOP_N_COUNT]
+    languages = (data.get("languages") or [])[:lang_limit]
+    projects = (data.get("projects") or [])[:lang_limit]
     language_colors = fetch_languages(api_key)
 
     total_text = data.get("human_readable_total_including_other_language") or ""
@@ -351,11 +493,11 @@ def main():
     languages_rows = build_language_rows(languages, language_colors)
     projects_rows = build_project_rows(projects)
 
-    languages_svg = render_svg(languages_title, languages_rows, len(languages))
-    projects_svg = render_svg(projects_title, projects_rows, len(projects))
+    languages_svg = render_svg(languages_title, languages_rows, len(languages), config)
+    projects_svg = render_svg(projects_title, projects_rows, len(projects), config)
 
-    write_svg(os.path.join(OUTPUT_DIR, LANGUAGES_SVG_NAME), languages_svg)
-    write_svg(os.path.join(OUTPUT_DIR, PROJECTS_SVG_NAME), projects_svg)
+    write_svg(os.path.join(output_dir, LANGUAGES_SVG_NAME), languages_svg)
+    write_svg(os.path.join(output_dir, PROJECTS_SVG_NAME), projects_svg)
 
 
 if __name__ == "__main__":

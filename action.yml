@@ -1,0 +1,134 @@
+name: WakaTime SVG
+description: Generate WakaTime SVG cards from your stats and publish them to an output branch.
+inputs:
+  WAKATIME_API_KEY:
+    description: Required. WakaTime API key.
+    required: true
+  GITHUB_TOKEN:
+    description: Optional. Token for checkout/push; defaults to github.token.
+    required: false
+    default: ""
+  WAKATIME_LANG_LIMIT:
+    description: Optional. Number of languages/projects to show.
+    required: false
+    default: "5"
+  WAKATIME_CHART_WIDTH:
+    description: Optional. Card width (px).
+    required: false
+    default: "360"
+  WAKATIME_CHART_HEIGHT:
+    description: Optional. Card height (px) when dynamic height is false.
+    required: false
+    default: ""
+  WAKATIME_CHART_BAR_HEIGHT:
+    description: Optional. Row/bar height (px).
+    required: false
+    default: "26"
+  WAKATIME_CHART_MARGIN_X:
+    description: Optional. Inner horizontal padding (px).
+    required: false
+    default: "16"
+  WAKATIME_CHART_MARGIN_Y:
+    description: Optional. Inner vertical padding (px).
+    required: false
+    default: "12"
+  WAKATIME_CHART_PADDING:
+    description: Optional. Outer padding around the card (px).
+    required: false
+    default: "12"
+  WAKATIME_CHART_COL_NAME_WIDTH:
+    description: Optional. Name column width (px).
+    required: false
+    default: "70"
+  WAKATIME_CHART_COL_DURATION_WIDTH:
+    description: Optional. Duration column width (px).
+    required: false
+    default: "75"
+  WAKATIME_CHART_DYNAMIC_HEIGHT:
+    description: Optional. Compute height based on rows.
+    required: false
+    default: "true"
+  BRANCH_NAME:
+    description: Optional. Branch to publish generated SVGs.
+    required: false
+    default: output
+  COMMIT_MESSAGE:
+    description: Optional. Commit message for published SVGs.
+    required: false
+    default: "chore: update wakatime svg"
+  IMAGES_FOLDER:
+    description: Optional. Output folder for generated SVGs.
+    required: false
+    default: generated
+runs:
+  using: composite
+  steps:
+    - name: Checkout repository
+      uses: actions/checkout@v4
+      with:
+        fetch-depth: 0
+        token: ${{ inputs.GITHUB_TOKEN || github.token }}
+    - name: Set up Python
+      uses: actions/setup-python@v5
+      with:
+        python-version: "3.14"
+        cache: pip
+    - name: Install dependencies
+      shell: bash
+      run: |
+        python -m pip install --upgrade pip
+        pip install requests
+    - name: Generate SVGs
+      shell: bash
+      env:
+        WAKATIME_API_KEY: ${{ inputs.WAKATIME_API_KEY }}
+        WAKATIME_LANG_LIMIT: ${{ inputs.WAKATIME_LANG_LIMIT }}
+        WAKATIME_CHART_WIDTH: ${{ inputs.WAKATIME_CHART_WIDTH }}
+        WAKATIME_CHART_HEIGHT: ${{ inputs.WAKATIME_CHART_HEIGHT }}
+        WAKATIME_CHART_BAR_HEIGHT: ${{ inputs.WAKATIME_CHART_BAR_HEIGHT }}
+        WAKATIME_CHART_MARGIN_X: ${{ inputs.WAKATIME_CHART_MARGIN_X }}
+        WAKATIME_CHART_MARGIN_Y: ${{ inputs.WAKATIME_CHART_MARGIN_Y }}
+        WAKATIME_CHART_PADDING: ${{ inputs.WAKATIME_CHART_PADDING }}
+        WAKATIME_CHART_COL_NAME_WIDTH: ${{ inputs.WAKATIME_CHART_COL_NAME_WIDTH }}
+        WAKATIME_CHART_COL_DURATION_WIDTH: ${{ inputs.WAKATIME_CHART_COL_DURATION_WIDTH }}
+        WAKATIME_CHART_DYNAMIC_HEIGHT: ${{ inputs.WAKATIME_CHART_DYNAMIC_HEIGHT }}
+        IMAGES_FOLDER: ${{ inputs.IMAGES_FOLDER }}
+      run: |
+        mkdir -p "${IMAGES_FOLDER}"
+        python "${{ github.action_path }}/scripts/generate-wakatime-svg.py"
+    - name: Publish SVGs to output branch
+      shell: bash
+      env:
+        BRANCH_NAME: ${{ inputs.BRANCH_NAME }}
+        COMMIT_MESSAGE: ${{ inputs.COMMIT_MESSAGE }}
+        IMAGES_FOLDER: ${{ inputs.IMAGES_FOLDER }}
+      run: |
+        set -euo pipefail
+        branch="${BRANCH_NAME:-output}"
+        images_dir="${IMAGES_FOLDER:-generated}"
+        base_branch="${GITHUB_REF_NAME}"
+
+        if [ ! -d "${images_dir}" ]; then
+          echo "Images folder not found: ${images_dir}"
+          exit 1
+        fi
+
+        git config user.name "github-actions[bot]"
+        git config user.email "github-actions[bot]@users.noreply.github.com"
+
+        git add "${images_dir}"
+        git commit -m "chore: temp commit" || true
+
+        if git show-ref --verify --quiet "refs/heads/${branch}"; then
+          git checkout "${branch}"
+        else
+          git checkout --orphan "${branch}"
+        fi
+
+        git rm -rf . >/dev/null 2>&1 || true
+        git checkout "${base_branch}" -- "${images_dir}"
+        git commit -m "${COMMIT_MESSAGE:-chore: update wakatime svg}" || true
+        git push origin "${branch}" --force
+branding:
+  icon: bar-chart
+  color: blue
