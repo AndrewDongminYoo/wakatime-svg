@@ -1,3 +1,9 @@
+"""Generate WakaTime SVG cards for recent language and project stats.
+
+Reads the WAKATIME_API_KEY environment variable, fetches last 7 days of data,
+and writes SVG files into the generated/ directory.
+"""
+
 import html
 import math
 import os
@@ -54,10 +60,14 @@ def clamp_pct(p: float) -> float:
     return max(0.0, min(100.0, p))
 
 
+def shorten_time_label(text: str) -> str:
+    """Shorten WakaTime duration labels for compact headings."""
+    return re.sub(r"([a-z])\w+", r"\g<1>", text or "", flags=re.IGNORECASE)
+
+
 def compact_time_text(text: str) -> str:
-    """Shorten WakaTime duration labels for the compact layout."""
-    text = esc(text or "")
-    return re.sub(r"([a-z])\w+", r"\g<1>", text, flags=re.IGNORECASE)
+    """Shorten and escape WakaTime duration labels for the compact layout."""
+    return esc(shorten_time_label(text))
 
 
 def ai_human_ratio(item: dict) -> tuple[float, float]:
@@ -117,8 +127,6 @@ def build_project_rows(items: list[dict]) -> str:
         name = esc(raw_name)
 
         time_text = compact_time_text(item.get("text") or "")
-        percent = clamp_pct(item.get("percent") or 0.0)
-        percent_text = f"{percent:.0f}%"
 
         ai_pct, human_pct = ai_human_ratio(item)
         bar_title = esc(f"Human {human_pct:.0f}% / AI {ai_pct:.0f}%")
@@ -127,14 +135,13 @@ def build_project_rows(items: list[dict]) -> str:
             f"""
         <li class="row project" style="animation-delay:{i * 150}ms;">
           <span class="lang" title="{name}">{name}</span>
-          <span class="time" title="{time_text}">{time_text}</span>
           <span class="bar" title="{bar_title}">
             <span class="bar-background">
               <span class="bar-human" style="width:{human_pct:.4f}%;"></span>
               <span class="bar-ai" style="width:{ai_pct:.4f}%;"></span>
             </span>
           </span>
-          <span class="percent">{percent_text}</span>
+          <span class="time project-time" title="{time_text}">{time_text}</span>
         </li>""".strip()
         )
 
@@ -195,6 +202,9 @@ def render_svg(title: str, rows_html: str, row_count: int) -> str:
       font-size: 16px;
       font-weight: 600;
       color: rgb(72, 148, 224);
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
     }}
 
     .rows {{
@@ -221,7 +231,7 @@ def render_svg(title: str, rows_html: str, row_count: int) -> str:
     }}
 
     .row.project {{
-      grid-template-columns: 70px 75px 1fr 32px;
+      grid-template-columns: minmax(120px, 1.3fr) 1fr 54px;
     }}
 
     @keyframes slideIn {{
@@ -253,6 +263,12 @@ def render_svg(title: str, rows_html: str, row_count: int) -> str:
       white-space: nowrap;
       overflow: hidden;
       text-overflow: ellipsis;
+    }}
+
+    .project-time {{
+      text-align: right;
+      font-variant-numeric: tabular-nums;
+      letter-spacing: -0.05rem;
     }}
 
     .percent {{
@@ -328,8 +344,8 @@ def main():
     total_text = total_text.replace("hr", "hour")
     total_text = total_text.replace("min", "minute")
 
-    languages_title = f"WakaTime Languages (last 7 days) · {total_text}"
-    projects_title = f"WakaTime Projects (last 7 days) · {total_text}"
+    languages_title = f"Languages · {total_text}"
+    projects_title = f"Projects · {total_text}"
 
     languages_rows = build_language_rows(languages, language_colors)
     projects_rows = build_project_rows(projects)
