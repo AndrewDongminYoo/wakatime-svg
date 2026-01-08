@@ -1,10 +1,12 @@
 import html
+import math
 import os
 import re
 
 import requests
 
 API_BASE = "https://wakatime.com/api"
+DEFAULT_BAR_COLOR = "#d0d7de"
 TOP_N_COUNT = 5
 
 
@@ -27,7 +29,7 @@ def fetch_languages(api_key: str) -> dict:
         name = (lang.get("name") or "").strip()
         color = (lang.get("color") or "").strip()
         if name:
-            lang_colors[name] = color or "#d0d7de"
+            lang_colors[name] = color or DEFAULT_BAR_COLOR
     return lang_colors
 
 
@@ -40,9 +42,9 @@ def clamp_pct(p: float) -> float:
     """Coerce a percentage to a finite float in the [0.0, 100.0] range."""
     try:
         p = float(p)
-    except Exception:
+    except (TypeError, ValueError, OverflowError):
         return 0.0
-    if p != p:  # NaN
+    if math.isnan(p):
         return 0.0
     return max(0.0, min(100.0, p))
 
