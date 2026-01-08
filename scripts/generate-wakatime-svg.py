@@ -1,9 +1,11 @@
 import html
 import os
+import re
 
 import requests
 
 API_BASE = "https://wakatime.com/api"
+TOP_N_COUNT = 5
 
 
 def fetch_stats(api_key: str) -> dict:
@@ -50,20 +52,22 @@ def main():
     api_key = os.environ["WAKATIME_API_KEY"]
 
     data = fetch_stats(api_key)
-    languages = (data.get("languages") or [])[:5]  # top 5
+    languages = (data.get("languages") or [])[:TOP_N_COUNT]
     language_colors = fetch_languages(api_key)
 
     total_text = esc(data.get("human_readable_total_including_other_language", ""))
     title = f"WakaTime (last 7 days) · {total_text}"
 
     # ---- layout: card-like ----
-    width = 720
-    padding = 16
+    width = 360
     header_h = 28  # h2 line-height-ish
+    rect_size = 6
+    w_padding = 16
+    h_padding = 12
     gap_after_header = 10
     row_h = 26
-    rows = len(languages)
-    height = padding * 2 + header_h + gap_after_header + rows * row_h + 10
+    rows = len(languages)  # rows <= TOP_N_COUNT
+    height = w_padding + h_padding + header_h + gap_after_header + rows * row_h + 10
 
     # ---- rows HTML ----
     rows_html = []
@@ -72,24 +76,25 @@ def main():
         name = esc(raw_name)
 
         time_text = esc(lang.get("text") or "")
-        pct = clamp_pct(lang.get("percent") or 0.0)
-        pct_text = f"{pct:.2f}%"
+        time_text = re.sub(r"([a-z])\w+", r"\g<1>", time_text, flags=re.IGNORECASE)
+        percent = clamp_pct(lang.get("percent") or 0.0)
+        percent_text = f"{percent:.0f}%"
 
         # color lookup uses raw_name (not escaped)
         color = esc(language_colors.get(raw_name, "#d0d7de"))
 
         rows_html.append(
             f"""
-            <li class="row" style="animation-delay:{i * 90}ms;">
+            <li class="row" style="animation-delay:{i * 150}ms;">
               <span class="dot" style="background:{color};"></span>
               <span class="lang" title="{name}">{name}</span>
               <span class="time" title="{time_text}">{time_text}</span>
               <span class="bar">
-                <span class="barBg">
-                  <span class="barFill" style="width:{pct:.4f}%; background:{color};"></span>
+                <span class="bar-background">
+                  <span class="bar-fill" style="width:{percent:.4f}%; background:{color};"></span>
                 </span>
               </span>
-              <span class="pct">{pct_text}</span>
+              <span class="percent">{percent_text}</span>
             </li>
             """.strip()
         )
@@ -100,61 +105,62 @@ def main():
   <style>
     svg {{
       font-family: -apple-system, BlinkMacSystemFont, Segoe UI, Helvetica, Arial, sans-serif, Apple Color Emoji, Segoe UI Emoji;
+      font-size: 14px;
+      line-height: 21px;
     }}
 
     #background {{
       fill: #00000000;
       stroke: #8B8B8B22;
       stroke-width: 1px;
-      rx: 10px;
-      ry: 10px;
+      rx: {rect_size}px;
+      ry: {rect_size}px;
     }}
 
     foreignObject {{
-      width: {width - padding * 2}px;
-      height: {height - padding * 2}px;
+      width: {width - w_padding * 2}px;
+      height: {height - h_padding * 2}px;
     }}
 
     .wrap {{
       width: 100%;
       height: 100%;
       overflow: hidden;
+      text-overflow: ellipsis;
     }}
 
     h2 {{
-      margin: 0 0 {gap_after_header}px 0;
+      margin-top: 0;
+      margin-bottom: {gap_after_header}px;
       line-height: {header_h}px;
       font-size: 16px;
-      font-weight: 650;
+      font-weight: 600;
       color: rgb(72, 148, 224);
     }}
 
-    ul {{
+    #rows {{
       list-style: none;
       padding: 0;
       margin: 0;
     }}
 
-    /*
-       5컬럼:
-       [color] [lang] [time] [bar] [percent]
-    */
     .row {{
       display: grid;
-      grid-template-columns: 10px 140px 150px 1fr 64px;
+      grid-template-columns: 5px 70px 75px 1fr 32px;
       gap: 10px;
       align-items: center;
       height: {row_h}px;
 
-      transform: translateX(-12px);
-      opacity: 0;
-      animation: slideIn 420ms ease-out forwards;
+      transform: translateX(-500%);
+      animation-name: slideIn;
+      animation-duration: 1s;
+      animation-function: ease-in-out;
+      animation-fill-mode: forwards;
     }}
 
     @keyframes slideIn {{
       to {{
         transform: translateX(0);
-        opacity: 1;
       }}
     }}
 
@@ -168,7 +174,7 @@ def main():
 
     .lang {{
       font-size: 12px;
-      font-weight: 650;
+      font-weight: 600;
       color: rgb(135, 135, 135);
       white-space: nowrap;
       overflow: hidden;
@@ -183,14 +189,14 @@ def main():
       text-overflow: ellipsis;
     }}
 
-    .pct {{
+    .percent {{
       font-size: 12px;
       color: rgb(150, 150, 150);
       text-align: right;
       font-variant-numeric: tabular-nums;
     }}
 
-    .barBg {{
+    .bar-background {{
       display: block;
       height: 8px;
       border-radius: 999px;
@@ -198,7 +204,7 @@ def main():
       overflow: hidden;
     }}
 
-    .barFill {{
+    .bar-fill {{
       display: block;
       height: 100%;
       border-radius: 999px;
@@ -206,12 +212,12 @@ def main():
     }}
   </style>
 
-  <rect x="6" y="6" width="{width - 12}" height="{height - 12}" id="background" />
+  <rect x="{rect_size}" y="{rect_size}" width="{width - rect_size * 2}" height="{height - rect_size * 2}" id="background" />
 
-  <foreignObject x="{padding}" y="{padding}">
+  <foreignObject x="{w_padding}" y="{h_padding}">
     <div xmlns="http://www.w3.org/1999/xhtml" class="wrap">
       <h2>{esc(title)}</h2>
-      <ul>
+      <ul id="rows">
         {list_html}
       </ul>
     </div>
