@@ -38,7 +38,7 @@ Generate SVG cards from WakaTime stats for the last 7 days. GitHub Actions refre
 
 ## GitHub Action Usage (Marketplace)
 
-Example workflow using this repo as an action:
+Example workflow using this repo as an action (defaults only):
 
 ```yaml
 name: Waka Charts
@@ -59,22 +59,56 @@ jobs:
         with:
           WAKATIME_API_KEY: ${{ secrets.WAKATIME_API_KEY }}
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-          WAKATIME_LANG_LIMIT: 5
-          WAKATIME_CHART_WIDTH: 360
-          WAKATIME_CHART_HEIGHT: ""
-          WAKATIME_CHART_BAR_HEIGHT: 26
-          WAKATIME_CHART_MARGIN_X: 16
+```
+
+Inputs map to environment variables consumed by `scripts/generate-wakatime-svg.py`. Values are optional unless marked required.
+
+Fully customized example (overrides every supported input):
+
+```yaml
+name: Waka Charts
+
+on:
+  workflow_dispatch:
+  schedule:
+    - cron: 0 0 * * *
+
+permissions:
+  contents: write
+
+jobs:
+  update-charts:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: AndrewDongminYoo/wakatime-svg@v1
+        with:
+          WAKATIME_API_KEY: ${{ secrets.WAKATIME_API_KEY }}
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          WAKATIME_LANG_LIMIT: 7
+          WAKATIME_CHART_WIDTH: 420
+          WAKATIME_CHART_HEIGHT: 200
+          WAKATIME_CHART_BAR_HEIGHT: 28
+          WAKATIME_CHART_MARGIN_X: 18
           WAKATIME_CHART_MARGIN_Y: 12
           WAKATIME_CHART_PADDING: 12
-          WAKATIME_CHART_COL_NAME_WIDTH: 70
-          WAKATIME_CHART_COL_DURATION_WIDTH: 75
-          WAKATIME_CHART_DYNAMIC_HEIGHT: true
+          WAKATIME_CHART_COL_NAME_WIDTH: 90
+          WAKATIME_CHART_COL_DURATION_WIDTH: 90
+          WAKATIME_CHART_DYNAMIC_HEIGHT: false
           BRANCH_NAME: output
           COMMIT_MESSAGE: "chore: update wakatime svg"
           IMAGES_FOLDER: generated
 ```
 
-Inputs map to environment variables consumed by `scripts/generate-wakatime-svg.py`. Values are optional unless marked required.
+## Why this action
+
+- Transparent SVGs blend nicely on both light and dark themes.
+- Mobile-friendly default width (360px) keeps cards readable in apps.
+- Shows both languages and projects (with additions/deletions split for projects).
+- Simple setup: defaults are sane, but layout can be fully customized.
+
+## Inspiration
+
+Inspired by `athul/waka-readme` and `rahul-jha98/github-stats-transparent`.
 
 ## Embed in README
 
