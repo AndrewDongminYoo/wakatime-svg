@@ -55,7 +55,7 @@ jobs:
   update-charts:
     runs-on: ubuntu-latest
     steps:
-      - uses: <USER>/<REPO>@vX.Y.Z
+      - uses: AndrewDongminYoo/wakatime-svg@v1
         with:
           WAKATIME_API_KEY: ${{ secrets.WAKATIME_API_KEY }}
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
@@ -84,6 +84,7 @@ jobs:
         with:
           WAKATIME_API_KEY: ${{ secrets.WAKATIME_API_KEY }}
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          # The values below are for customization. You may omit them if desired.
           WAKATIME_LANG_LIMIT: 7
           WAKATIME_CHART_WIDTH: 420
           WAKATIME_CHART_HEIGHT: 200
