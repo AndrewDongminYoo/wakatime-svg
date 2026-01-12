@@ -178,26 +178,6 @@ def parse_total_seconds(item: dict) -> float:
         return 0.0
 
 
-def format_duration_text(total_seconds: float) -> str:
-    """Format seconds to a WakaTime-like duration label."""
-    seconds = max(0, int(round(total_seconds)))
-    total_minutes = seconds // 60
-    hours = total_minutes // 60
-    minutes = total_minutes % 60
-
-    if hours > 0 and minutes > 0:
-        hour_label = "hr" if hours == 1 else "hrs"
-        minute_label = "min" if minutes == 1 else "mins"
-        return f"{hours} {hour_label} {minutes} {minute_label}"
-    if hours > 0:
-        hour_label = "hr" if hours == 1 else "hrs"
-        return f"{hours} {hour_label}"
-    if minutes > 0:
-        minute_label = "min" if minutes == 1 else "mins"
-        return f"{minutes} {minute_label}"
-    return "0 secs"
-
-
 def normalize_language_percent(items: list[dict]) -> list[dict]:
     """Normalize language percentages based on total_seconds across items."""
     total_seconds = sum(parse_total_seconds(item) for item in items)
@@ -214,42 +194,19 @@ def normalize_language_percent(items: list[dict]) -> list[dict]:
     return normalized
 
 
-def aggregate_other_items(items: list[dict]) -> dict:
-    """Aggregate remaining language items into an 'Other' entry."""
-    total_seconds = sum(parse_total_seconds(item) for item in items)
-    return {
-        "name": "Other",
-        "total_seconds": total_seconds,
-        "percent": 0.0,
-        "text": format_duration_text(total_seconds),
-    }
-
-
 def prepare_language_items(items: list[dict], limit: int) -> list[dict]:
-    """Return top (N-1) languages plus aggregated 'Other', normalized to 100%."""
+    """Return top N languages (excluding Other), normalized to 100%."""
     if not items:
         return []
 
     safe_limit = max(1, int(limit))
-    if len(items) <= safe_limit:
-        return normalize_language_percent(items)
+    language_items = [
+        item for item in items if (item.get("name") or "").strip().lower() != "other"
+    ]
+    if not language_items:
+        return []
 
-    other_items = []
-    language_items = []
-    for item in items:
-        name = (item.get("name") or "").strip().lower()
-        if name == "other":
-            other_items.append(item)
-        else:
-            language_items.append(item)
-
-    top_count = max(0, safe_limit - 1)
-    top_items = language_items[:top_count]
-    remainder_items = language_items[top_count:] + other_items
-
-    if remainder_items:
-        top_items.append(aggregate_other_items(remainder_items))
-
+    top_items = language_items[:safe_limit]
     return normalize_language_percent(top_items)
 
 
@@ -281,6 +238,9 @@ def build_language_rows(items: list[dict], colors: dict[str, str]) -> str:
         time_text = compact_time_text(item.get("text") or "")
         percent = clamp_pct(item.get("percent") or 0.0)
         percent_text = f"{percent:.0f}%"
+        bar_class = "bar-fill"
+        if percent >= 99.5:
+            bar_class += " bar-fill-full"
 
         color = esc(colors.get(raw_name, DEFAULT_BAR_COLOR))
 
@@ -292,7 +252,7 @@ def build_language_rows(items: list[dict], colors: dict[str, str]) -> str:
           <span class="time" title="{time_text}">{time_text}</span>
           <span class="bar">
             <span class="bar-background">
-              <span class="bar-fill" style="width:{percent:.4f}%; background:{color};"/>
+              <span class="{bar_class}" style="width:{percent:.4f}%; background:{color};"/>
             </span>
           </span>
           <span class="percent">{percent_text}</span>
@@ -496,9 +456,13 @@ def render_svg(title: str, rows_html: str, row_count: int, config: dict) -> str:
     .bar-fill {{
       display: block;
       height: 100%;
-      border-radius: 999px;
+      border-radius: 999px 0 0 999px;
       opacity: 0.9;
       flex: 0 0 auto;
+    }}
+
+    .bar-fill-full {{
+      border-radius: 999px;
     }}
 
     .bar-additions,
