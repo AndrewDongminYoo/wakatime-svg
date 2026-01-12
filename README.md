@@ -55,7 +55,7 @@ jobs:
   update-charts:
     runs-on: ubuntu-latest
     steps:
-      - uses: AndrewDongminYoo/wakatime-svg@v1
+      - uses: AndrewDongminYoo/wakatime-svg@v1.1.0
         with:
           WAKATIME_API_KEY: ${{ secrets.WAKATIME_API_KEY }}
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
@@ -80,7 +80,7 @@ jobs:
   update-charts:
     runs-on: ubuntu-latest
     steps:
-      - uses: AndrewDongminYoo/wakatime-svg@v1
+      - uses: AndrewDongminYoo/wakatime-svg@v1.1.0
         with:
           WAKATIME_API_KEY: ${{ secrets.WAKATIME_API_KEY }}
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
@@ -94,6 +94,7 @@ jobs:
           WAKATIME_CHART_PADDING: 12
           WAKATIME_CHART_COL_NAME_WIDTH: 90
           WAKATIME_CHART_COL_DURATION_WIDTH: 90
+          WAKATIME_CHART_COL_PERCENT_WIDTH: 42
           WAKATIME_CHART_DYNAMIC_HEIGHT: false
           BRANCH_NAME: output
           COMMIT_MESSAGE: "chore: update wakatime svg"
@@ -110,6 +111,10 @@ jobs:
 ## Inspiration
 
 Inspired by `athul/waka-readme` and `rahul-jha98/github-stats-transparent`.
+
+## Release Notes
+
+See [`RELEASE_NOTES.md`](RELEASE_NOTES.md) for the full changelog.
 
 ## Embed in README
 

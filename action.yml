@@ -1,3 +1,4 @@
+# yaml-language-server: $schema=https://json.schemastore.org/github-action.json
 name: WakaTime SVG
 description: Generate WakaTime SVG cards from your stats and publish them to an output branch.
 inputs:
@@ -43,7 +44,11 @@ inputs:
   WAKATIME_CHART_COL_DURATION_WIDTH:
     description: Optional. Duration column width (px).
     required: false
-    default: "75"
+    default: "60"
+  WAKATIME_CHART_COL_PERCENT_WIDTH:
+    description: Optional. Percent column width (px).
+    required: false
+    default: "42"
   WAKATIME_CHART_DYNAMIC_HEIGHT:
     description: Optional. Compute height based on rows.
     required: false
@@ -91,6 +96,7 @@ runs:
         WAKATIME_CHART_PADDING: ${{ inputs.WAKATIME_CHART_PADDING }}
         WAKATIME_CHART_COL_NAME_WIDTH: ${{ inputs.WAKATIME_CHART_COL_NAME_WIDTH }}
         WAKATIME_CHART_COL_DURATION_WIDTH: ${{ inputs.WAKATIME_CHART_COL_DURATION_WIDTH }}
+        WAKATIME_CHART_COL_PERCENT_WIDTH: ${{ inputs.WAKATIME_CHART_COL_PERCENT_WIDTH }}
         WAKATIME_CHART_DYNAMIC_HEIGHT: ${{ inputs.WAKATIME_CHART_DYNAMIC_HEIGHT }}
         IMAGES_FOLDER: ${{ inputs.IMAGES_FOLDER }}
       run: |

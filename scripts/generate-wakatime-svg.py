@@ -87,6 +87,9 @@ def load_chart_config() -> dict[str, int | bool]:
     duration_width = env_int(
         "WAKATIME_CHART_COL_DURATION_WIDTH", DEFAULT_DURATION_COL_WIDTH, minimum=32
     )
+    percent_width = env_int(
+        "WAKATIME_CHART_COL_PERCENT_WIDTH", DEFAULT_PERCENT_COL_WIDTH, minimum=24
+    )
     project_name_width = DEFAULT_PROJECT_NAME_COL_WIDTH
     project_duration_width = DEFAULT_PROJECT_DURATION_COL_WIDTH
     if env_has_value("WAKATIME_CHART_COL_NAME_WIDTH"):
@@ -112,7 +115,7 @@ def load_chart_config() -> dict[str, int | bool]:
         "header_height": DEFAULT_HEADER_HEIGHT,
         "gap_after_header": DEFAULT_GAP_AFTER_HEADER,
         "col_dot_width": DEFAULT_DOT_COL_WIDTH,
-        "col_percent_width": DEFAULT_PERCENT_COL_WIDTH,
+        "col_percent_width": percent_width,
         "col_name_width": name_width,
         "col_duration_width": duration_width,
         "project_name_width": project_name_width,
