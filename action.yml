@@ -125,7 +125,7 @@ runs:
         if git show-ref --verify --quiet "refs/heads/${branch}"; then
           git worktree add "${workdir}" "${branch}"
         else
-          git worktree add --orphan "${branch}" "${workdir}"
+          git worktree add --orphan -b "${branch}" "${workdir}"
         fi
 
         find "${workdir}" -mindepth 1 -maxdepth 1 ! -name ".git" -exec rm -rf {} +
