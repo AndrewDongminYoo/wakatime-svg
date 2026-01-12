@@ -21,10 +21,14 @@ inputs:
     description: Optional. Card height (px) when dynamic height is false.
     required: false
     default: ""
-  WAKATIME_CHART_BAR_HEIGHT:
-    description: Optional. Row/bar height (px).
+  WAKATIME_CHART_ROW_HEIGHT:
+    description: Optional. Row height (px).
     required: false
     default: "26"
+  WAKATIME_CHART_BAR_HEIGHT:
+    description: Optional. Bar height (px).
+    required: false
+    default: "8"
   WAKATIME_CHART_MARGIN_X:
     description: Optional. Inner horizontal padding (px).
     required: false
@@ -90,6 +94,7 @@ runs:
         WAKATIME_LANG_LIMIT: ${{ inputs.WAKATIME_LANG_LIMIT }}
         WAKATIME_CHART_WIDTH: ${{ inputs.WAKATIME_CHART_WIDTH }}
         WAKATIME_CHART_HEIGHT: ${{ inputs.WAKATIME_CHART_HEIGHT }}
+        WAKATIME_CHART_ROW_HEIGHT: ${{ inputs.WAKATIME_CHART_ROW_HEIGHT }}
         WAKATIME_CHART_BAR_HEIGHT: ${{ inputs.WAKATIME_CHART_BAR_HEIGHT }}
         WAKATIME_CHART_MARGIN_X: ${{ inputs.WAKATIME_CHART_MARGIN_X }}
         WAKATIME_CHART_MARGIN_Y: ${{ inputs.WAKATIME_CHART_MARGIN_Y }}

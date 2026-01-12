@@ -81,6 +81,14 @@ def env_bool(name: str, default: bool) -> bool:
 
 def load_chart_config() -> dict[str, int | bool]:
     """Load chart layout settings from environment variables."""
+    row_height = env_int("WAKATIME_CHART_ROW_HEIGHT", DEFAULT_ROW_HEIGHT, minimum=16)
+    if not env_has_value("WAKATIME_CHART_ROW_HEIGHT") and env_has_value(
+        "WAKATIME_CHART_BAR_HEIGHT"
+    ):
+        # Backward-compat: bar height used to control row height as well.
+        row_height = env_int(
+            "WAKATIME_CHART_BAR_HEIGHT", DEFAULT_ROW_HEIGHT, minimum=16
+        )
     name_width = env_int(
         "WAKATIME_CHART_COL_NAME_WIDTH", DEFAULT_NAME_COL_WIDTH, minimum=40
     )
@@ -100,9 +108,7 @@ def load_chart_config() -> dict[str, int | bool]:
     return {
         "width": env_int("WAKATIME_CHART_WIDTH", DEFAULT_CHART_WIDTH, minimum=120),
         "height": env_int("WAKATIME_CHART_HEIGHT", 0, minimum=0),
-        "row_height": env_int(
-            "WAKATIME_CHART_BAR_HEIGHT", DEFAULT_ROW_HEIGHT, minimum=16
-        ),
+        "row_height": row_height,
         "bar_height": env_int(
             "WAKATIME_CHART_BAR_HEIGHT", DEFAULT_BAR_HEIGHT, minimum=4
         ),

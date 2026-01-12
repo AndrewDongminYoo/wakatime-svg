@@ -13,6 +13,7 @@
 ### New Input
 
 - `WAKATIME_CHART_COL_PERCENT_WIDTH`: Optional percent column width (px).
+- `WAKATIME_CHART_ROW_HEIGHT`: Optional row height (px).
 
 ## v1.0.0 - 2026-01-08
 
