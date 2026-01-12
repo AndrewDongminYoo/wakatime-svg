@@ -242,7 +242,7 @@ def build_language_rows(items: list[dict], colors: dict[str, str]) -> str:
         time_text = compact_time_text(item.get("text") or "")
         percent = clamp_pct(item.get("percent") or 0.0)
         raw_percent = clamp_pct(item.get("percent_raw", item.get("percent") or 0.0))
-        percent_text = f"{raw_percent:.0f}%"
+        percent_text = f"{raw_percent:.1f}%"
         bar_class = "bar-fill"
         if percent <= 0.0:
             bar_class += " bar-fill-empty"
