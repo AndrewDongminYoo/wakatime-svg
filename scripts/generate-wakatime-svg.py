@@ -206,7 +206,11 @@ def prepare_language_items(items: list[dict], limit: int) -> list[dict]:
     if not language_items:
         return []
 
-    top_items = language_items[:safe_limit]
+    top_items = []
+    for item in language_items[:safe_limit]:
+        updated = dict(item)
+        updated["percent_raw"] = item.get("percent", 0.0)
+        top_items.append(updated)
     return normalize_language_percent(top_items)
 
 
@@ -237,9 +241,12 @@ def build_language_rows(items: list[dict], colors: dict[str, str]) -> str:
 
         time_text = compact_time_text(item.get("text") or "")
         percent = clamp_pct(item.get("percent") or 0.0)
-        percent_text = f"{percent:.0f}%"
+        raw_percent = clamp_pct(item.get("percent_raw", item.get("percent") or 0.0))
+        percent_text = f"{raw_percent:.0f}%"
         bar_class = "bar-fill"
-        if percent >= 99.5:
+        if percent <= 0.0:
+            bar_class += " bar-fill-empty"
+        elif percent >= 99.5:
             bar_class += " bar-fill-full"
 
         color = esc(colors.get(raw_name, DEFAULT_BAR_COLOR))
@@ -302,6 +309,7 @@ def render_svg(title: str, rows_html: str, row_count: int, config: dict) -> str:
     gap_after_header = int(config["gap_after_header"])
     row_h = int(config["row_height"])
     bar_h = min(int(config["bar_height"]), row_h)
+    bar_cap = max(2, bar_h)
     name_w = int(config["col_name_width"])
     duration_w = int(config["col_duration_width"])
     project_name_w = int(config["project_name_width"])
@@ -459,10 +467,31 @@ def render_svg(title: str, rows_html: str, row_count: int, config: dict) -> str:
       border-radius: 999px 0 0 999px;
       opacity: 0.9;
       flex: 0 0 auto;
+      position: relative;
+      --bar-cap-size: {bar_cap}px;
+    }}
+
+    .bar-fill::after {{
+      content: "";
+      position: absolute;
+      right: calc(var(--bar-cap-size) / -2);
+      width: var(--bar-cap-size);
+      height: 100%;
+      background: inherit;
+      border-radius: 999px;
     }}
 
     .bar-fill-full {{
       border-radius: 999px;
+    }}
+
+    .bar-fill-full::after,
+    .bar-fill-empty::after {{
+      display: none;
+    }}
+
+    .bar-fill-empty {{
+      display: none;
     }}
 
     .bar-additions,
