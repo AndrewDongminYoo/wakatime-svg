@@ -170,6 +170,89 @@ def compact_time_text(text: str) -> str:
     return esc(shorten_time_label(text))
 
 
+def parse_total_seconds(item: dict) -> float:
+    """Return a numeric total_seconds value from an item."""
+    try:
+        return float(item.get("total_seconds") or 0.0)
+    except (TypeError, ValueError):
+        return 0.0
+
+
+def format_duration_text(total_seconds: float) -> str:
+    """Format seconds to a WakaTime-like duration label."""
+    seconds = max(0, int(round(total_seconds)))
+    total_minutes = seconds // 60
+    hours = total_minutes // 60
+    minutes = total_minutes % 60
+
+    if hours > 0 and minutes > 0:
+        hour_label = "hr" if hours == 1 else "hrs"
+        minute_label = "min" if minutes == 1 else "mins"
+        return f"{hours} {hour_label} {minutes} {minute_label}"
+    if hours > 0:
+        hour_label = "hr" if hours == 1 else "hrs"
+        return f"{hours} {hour_label}"
+    if minutes > 0:
+        minute_label = "min" if minutes == 1 else "mins"
+        return f"{minutes} {minute_label}"
+    return "0 secs"
+
+
+def normalize_language_percent(items: list[dict]) -> list[dict]:
+    """Normalize language percentages based on total_seconds across items."""
+    total_seconds = sum(parse_total_seconds(item) for item in items)
+    if total_seconds <= 0:
+        return items
+
+    normalized = []
+    for item in items:
+        seconds = parse_total_seconds(item)
+        percent = clamp_pct(seconds / total_seconds * 100.0)
+        updated = dict(item)
+        updated["percent"] = percent
+        normalized.append(updated)
+    return normalized
+
+
+def aggregate_other_items(items: list[dict]) -> dict:
+    """Aggregate remaining language items into an 'Other' entry."""
+    total_seconds = sum(parse_total_seconds(item) for item in items)
+    return {
+        "name": "Other",
+        "total_seconds": total_seconds,
+        "percent": 0.0,
+        "text": format_duration_text(total_seconds),
+    }
+
+
+def prepare_language_items(items: list[dict], limit: int) -> list[dict]:
+    """Return top (N-1) languages plus aggregated 'Other', normalized to 100%."""
+    if not items:
+        return []
+
+    safe_limit = max(1, int(limit))
+    if len(items) <= safe_limit:
+        return normalize_language_percent(items)
+
+    other_items = []
+    language_items = []
+    for item in items:
+        name = (item.get("name") or "").strip().lower()
+        if name == "other":
+            other_items.append(item)
+        else:
+            language_items.append(item)
+
+    top_count = max(0, safe_limit - 1)
+    top_items = language_items[:top_count]
+    remainder_items = language_items[top_count:] + other_items
+
+    if remainder_items:
+        top_items.append(aggregate_other_items(remainder_items))
+
+    return normalize_language_percent(top_items)
+
+
 def additions_deletions_ratio(item: dict) -> tuple[float, float]:
     """Return additions vs deletions percentages based on change totals."""
     ai_additions = float(item.get("ai_additions") or 0)
@@ -479,7 +562,7 @@ def main():
     output_dir = env_str("IMAGES_FOLDER", DEFAULT_OUTPUT_DIR)
 
     data = fetch_stats(api_key)
-    languages = (data.get("languages") or [])[:lang_limit]
+    languages = prepare_language_items(data.get("languages") or [], lang_limit)
     projects = (data.get("projects") or [])[:lang_limit]
     language_colors = fetch_languages(api_key)
 
