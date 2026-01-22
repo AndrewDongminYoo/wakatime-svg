@@ -102,6 +102,8 @@ jobs:
           IMAGES_FOLDER: generated
 ```
 
+You can also override the text shown for private repositories by setting `WAKATIME_PRIVATE_PROJECT_LABEL` (default `Private project`) when WakaTime reports `Unknown Project`.
+
 ## Why this action
 
 - Transparent SVGs blend nicely on both light and dark themes.

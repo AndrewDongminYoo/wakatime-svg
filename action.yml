@@ -13,6 +13,10 @@ inputs:
     description: Optional. Number of languages/projects to show.
     required: false
     default: "5"
+  WAKATIME_PRIVATE_PROJECT_LABEL:
+    description: Optional. Label to show in place of WakaTime's `Unknown Project`.
+    required: false
+    default: "Private project"
   WAKATIME_CHART_WIDTH:
     description: Optional. Card width (px).
     required: false
@@ -92,6 +96,7 @@ runs:
       env:
         WAKATIME_API_KEY: ${{ inputs.WAKATIME_API_KEY }}
         WAKATIME_LANG_LIMIT: ${{ inputs.WAKATIME_LANG_LIMIT }}
+        WAKATIME_PRIVATE_PROJECT_LABEL: ${{ inputs.WAKATIME_PRIVATE_PROJECT_LABEL }}
         WAKATIME_CHART_WIDTH: ${{ inputs.WAKATIME_CHART_WIDTH }}
         WAKATIME_CHART_HEIGHT: ${{ inputs.WAKATIME_CHART_HEIGHT }}
         WAKATIME_CHART_ROW_HEIGHT: ${{ inputs.WAKATIME_CHART_ROW_HEIGHT }}

@@ -17,6 +17,8 @@ DEFAULT_BAR_COLOR = "#d0d7de"
 DELETIONS_BAR_COLOR = "#f37c7c"
 LANGUAGES_SVG_NAME = "languages.svg"
 PROJECTS_SVG_NAME = "projects.svg"
+UNKNOWN_PROJECT_PLACEHOLDER = "Unknown Project"
+DEFAULT_UNKNOWN_PROJECT_LABEL = "Private project"
 
 DEFAULT_OUTPUT_DIR = "generated"
 DEFAULT_TOP_N_COUNT = 5
@@ -241,6 +243,16 @@ def additions_deletions_ratio(item: dict) -> tuple[float, float]:
     return additions_pct, deletions_pct
 
 
+def resolve_project_display_name(raw_name: str, private_label: str) -> str:
+    """Return a display-friendly name for private/unknown projects."""
+    safe_name = (raw_name or "").strip()
+    if not safe_name:
+        return private_label
+    if safe_name.lower() == UNKNOWN_PROJECT_PLACEHOLDER.lower():
+        return private_label
+    return safe_name
+
+
 def build_language_rows(items: list[dict], colors: dict[str, str]) -> str:
     """Build the HTML list items for the language stats."""
     rows_html = []
@@ -260,8 +272,7 @@ def build_language_rows(items: list[dict], colors: dict[str, str]) -> str:
 
         color = esc(colors.get(raw_name, DEFAULT_BAR_COLOR))
 
-        rows_html.append(
-            f"""
+        rows_html.append(f"""
         <li class="row language" style="animation-delay:{i * 150}ms;">
           <span class="dot" style="background:{color};"/>
           <span class="lang" title="{name}">{name}</span>
@@ -272,26 +283,25 @@ def build_language_rows(items: list[dict], colors: dict[str, str]) -> str:
             </span>
           </span>
           <span class="percent">{percent_text}</span>
-        </li>""".strip()
-        )
+        </li>""".strip())
 
     return "\n        ".join(rows_html)
 
 
-def build_project_rows(items: list[dict]) -> str:
+def build_project_rows(items: list[dict], private_label: str) -> str:
     """Build the HTML list items for the project stats."""
     rows_html = []
     for i, item in enumerate(items):
         raw_name = (item.get("name") or "").strip()
-        name = esc(raw_name)
+        display_name = resolve_project_display_name(raw_name, private_label)
+        name = esc(display_name)
 
         time_text = compact_time_text(item.get("text") or "")
 
         additions_pct, deletions_pct = additions_deletions_ratio(item)
         bar_title = esc(f"+ {additions_pct:.0f}% / - {deletions_pct:.0f}%")
 
-        rows_html.append(
-            f"""
+        rows_html.append(f"""
         <li class="row project" style="animation-delay:{i * 150}ms;">
           <span class="lang" title="{name}">{name}</span>
           <span class="bar" title="{bar_title}">
@@ -301,8 +311,7 @@ def build_project_rows(items: list[dict]) -> str:
             </span>
           </span>
           <span class="time project-time" title="{time_text}">{time_text}</span>
-        </li>""".strip()
-        )
+        </li>""".strip())
 
     return "\n        ".join(rows_html)
 
@@ -556,12 +565,15 @@ def write_svg(path: str, content: str) -> None:
         handle.write(content)
 
 
-def main():
+def main() -> None:
     """Render the WakaTime SVG cards to disk."""
     api_key = os.environ["WAKATIME_API_KEY"]
     config = load_chart_config()
     lang_limit = env_int("WAKATIME_LANG_LIMIT", DEFAULT_TOP_N_COUNT, minimum=1)
     output_dir = env_str("IMAGES_FOLDER", DEFAULT_OUTPUT_DIR)
+    private_project_label = env_str(
+        "WAKATIME_PRIVATE_PROJECT_LABEL", DEFAULT_UNKNOWN_PROJECT_LABEL
+    )
 
     data = fetch_stats(api_key)
     languages = prepare_language_items(data.get("languages") or [], lang_limit)
@@ -576,7 +588,7 @@ def main():
     projects_title = f"Projects (+/-) · {total_text}"
 
     languages_rows = build_language_rows(languages, language_colors)
-    projects_rows = build_project_rows(projects)
+    projects_rows = build_project_rows(projects, private_project_label)
 
     languages_svg = render_svg(languages_title, languages_rows, len(languages), config)
     projects_svg = render_svg(projects_title, projects_rows, len(projects), config)
