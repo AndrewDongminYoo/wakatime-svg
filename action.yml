@@ -13,6 +13,10 @@ inputs:
     description: Optional. Number of languages/projects to show.
     required: false
     default: "5"
+  WAKATIME_SKIP_UNKNOWN_PROJECTS:
+    description: Optional. Skip WakaTime’s `Unknown Project` rows and extend the ranking.
+    required: false
+    default: "false"
   WAKATIME_PRIVATE_PROJECT_LABEL:
     description: Optional. Label to show in place of WakaTime's `Unknown Project`.
     required: false
@@ -96,6 +100,7 @@ runs:
       env:
         WAKATIME_API_KEY: ${{ inputs.WAKATIME_API_KEY }}
         WAKATIME_LANG_LIMIT: ${{ inputs.WAKATIME_LANG_LIMIT }}
+        WAKATIME_SKIP_UNKNOWN_PROJECTS: ${{ inputs.WAKATIME_SKIP_UNKNOWN_PROJECTS }}
         WAKATIME_PRIVATE_PROJECT_LABEL: ${{ inputs.WAKATIME_PRIVATE_PROJECT_LABEL }}
         WAKATIME_CHART_WIDTH: ${{ inputs.WAKATIME_CHART_WIDTH }}
         WAKATIME_CHART_HEIGHT: ${{ inputs.WAKATIME_CHART_HEIGHT }}

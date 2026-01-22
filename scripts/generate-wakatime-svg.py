@@ -243,14 +243,44 @@ def additions_deletions_ratio(item: dict) -> tuple[float, float]:
     return additions_pct, deletions_pct
 
 
+def is_unknown_project_name(raw_name: str) -> bool:
+    """Return True if the project name resembles WakaTime's Unknown Project placeholder."""
+    safe_name = (raw_name or "").strip()
+    if not safe_name:
+        return True
+    return safe_name.lower() == UNKNOWN_PROJECT_PLACEHOLDER.lower()
+
+
 def resolve_project_display_name(raw_name: str, private_label: str) -> str:
     """Return a display-friendly name for private/unknown projects."""
     safe_name = (raw_name or "").strip()
-    if not safe_name:
-        return private_label
-    if safe_name.lower() == UNKNOWN_PROJECT_PLACEHOLDER.lower():
+    if is_unknown_project_name(safe_name):
         return private_label
     return safe_name
+
+
+def prepare_project_items(
+    items: list[dict], limit: int, skip_unknown: bool
+) -> list[dict]:
+    """Return the top-N project entries, optionally skipping Unknown Project items."""
+    if not items:
+        return []
+
+    safe_limit = max(1, limit)
+    selected: list[dict] = []
+    for item in items:
+        raw_name = (item.get("name") or "").strip()
+        if skip_unknown and is_unknown_project_name(raw_name):
+            continue
+
+        selected.append(item)
+        if len(selected) >= safe_limit:
+            break
+
+    if not skip_unknown:
+        return selected[:safe_limit]
+
+    return selected
 
 
 def build_language_rows(items: list[dict], colors: dict[str, str]) -> str:
@@ -574,10 +604,13 @@ def main() -> None:
     private_project_label = env_str(
         "WAKATIME_PRIVATE_PROJECT_LABEL", DEFAULT_UNKNOWN_PROJECT_LABEL
     )
+    skip_unknown_projects = env_bool("WAKATIME_SKIP_UNKNOWN_PROJECTS", False)
 
     data = fetch_stats(api_key)
     languages = prepare_language_items(data.get("languages") or [], lang_limit)
-    projects = (data.get("projects") or [])[:lang_limit]
+    projects = prepare_project_items(
+        data.get("projects") or [], lang_limit, skip_unknown_projects
+    )
     language_colors = fetch_languages(api_key)
 
     total_text = data.get("human_readable_total_including_other_language") or ""

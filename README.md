@@ -104,6 +104,8 @@ jobs:
 
 You can also override the text shown for private repositories by setting `WAKATIME_PRIVATE_PROJECT_LABEL` (default `Private project`) when WakaTime reports `Unknown Project`.
 
+If you'd rather remove the placeholder line entirely and keep showing the next-ranked projects, set `WAKATIME_SKIP_UNKNOWN_PROJECTS=true`. When that flag is enabled, the card skips any `Unknown Project` entries (or blank names) and continues down the ranking so you still see `WAKATIME_LANG_LIMIT` actual projects; when it is false (default), the placeholder is replaced by the private-project label instead.
+
 ## Why this action
 
 - Transparent SVGs blend nicely on both light and dark themes.
