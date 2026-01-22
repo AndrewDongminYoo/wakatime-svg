@@ -18,9 +18,9 @@ inputs:
     required: false
     default: "false"
   WAKATIME_PRIVATE_PROJECT_LABEL:
-    description: Optional. Label to show in place of WakaTime's `Unknown Project`.
+    description: Optional. `true` (default) shows “Private project”, `false` keeps WakaTime’s `Unknown Project`, any other string is the replacement text.
     required: false
-    default: "Private project"
+    default: "true"
   WAKATIME_CHART_WIDTH:
     description: Optional. Card width (px).
     required: false

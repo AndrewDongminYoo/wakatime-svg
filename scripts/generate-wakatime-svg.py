@@ -251,10 +251,12 @@ def is_unknown_project_name(raw_name: str) -> bool:
     return safe_name.lower() == UNKNOWN_PROJECT_PLACEHOLDER.lower()
 
 
-def resolve_project_display_name(raw_name: str, private_label: str) -> str:
+def resolve_project_display_name(raw_name: str, private_label: str | None) -> str:
     """Return a display-friendly name for private/unknown projects."""
     safe_name = (raw_name or "").strip()
     if is_unknown_project_name(safe_name):
+        if private_label is None:
+            return UNKNOWN_PROJECT_PLACEHOLDER
         return private_label
     return safe_name
 
@@ -318,7 +320,7 @@ def build_language_rows(items: list[dict], colors: dict[str, str]) -> str:
     return "\n        ".join(rows_html)
 
 
-def build_project_rows(items: list[dict], private_label: str) -> str:
+def build_project_rows(items: list[dict], private_label: str | None) -> str:
     """Build the HTML list items for the project stats."""
     rows_html = []
     for i, item in enumerate(items):
@@ -595,15 +597,26 @@ def write_svg(path: str, content: str) -> None:
         handle.write(content)
 
 
+def parse_private_project_label_env() -> str | None:
+    """Interpret the WAKATIME_PRIVATE_PROJECT_LABEL environment value."""
+    raw_value = os.getenv("WAKATIME_PRIVATE_PROJECT_LABEL")
+    if raw_value is None or raw_value.strip() == "":
+        return DEFAULT_UNKNOWN_PROJECT_LABEL
+    normalized = raw_value.strip().lower()
+    if normalized == "false":
+        return None
+    if normalized == "true":
+        return DEFAULT_UNKNOWN_PROJECT_LABEL
+    return raw_value.strip()
+
+
 def main() -> None:
     """Render the WakaTime SVG cards to disk."""
     api_key = os.environ["WAKATIME_API_KEY"]
     config = load_chart_config()
     lang_limit = env_int("WAKATIME_LANG_LIMIT", DEFAULT_TOP_N_COUNT, minimum=1)
     output_dir = env_str("IMAGES_FOLDER", DEFAULT_OUTPUT_DIR)
-    private_project_label = env_str(
-        "WAKATIME_PRIVATE_PROJECT_LABEL", DEFAULT_UNKNOWN_PROJECT_LABEL
-    )
+    private_project_label = parse_private_project_label_env()
     skip_unknown_projects = env_bool("WAKATIME_SKIP_UNKNOWN_PROJECTS", False)
 
     data = fetch_stats(api_key)
