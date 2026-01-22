@@ -1,5 +1,17 @@
 # Release Notes
 
+## v1.2.0 - 2026-01-22
+
+### Improvements
+
+- Respect private repos better by default: `WAKATIME_PRIVATE_PROJECT_LABEL` can now be `false` (keep “Unknown Project”), `true` (show “Private project”), or any custom text, and `WAKATIME_SKIP_UNKNOWN_PROJECTS=true` skips placeholder rows and continues the ranking.
+- Expose the new knobs through the composite action inputs and docs so workflows can tune how private/unknown projects appear.
+
+### New Input
+
+- `WAKATIME_PRIVATE_PROJECT_LABEL`: Controls the replacement text for WakaTime’s `Unknown Project` rows (`false` leaves it as-is, `true` (default) shows “Private project”, any other string is used verbatim).
+- `WAKATIME_SKIP_UNKNOWN_PROJECTS`: Skip `Unknown Project` entries and continue down the list to keep showing `WAKATIME_LANG_LIMIT` projects.
+
 ## v1.1.0 - 2026-01-12
 
 ### Improvements
