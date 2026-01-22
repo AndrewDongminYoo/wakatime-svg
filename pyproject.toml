@@ -1,7 +1,7 @@
 [project]
 name = "wakatime-svg"
 version = "1.2.0"
-description = "Add your description here"
+description = "Generate SVG cards from WakaTime stats for the last 7 days. GitHub Actions refreshes the SVGs daily and publishes the artifacts to the `output` branch."
 readme = "README.md"
 requires-python = ">=3.14"
 dependencies = ["requests>=2.32.5"]
