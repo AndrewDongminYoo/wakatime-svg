@@ -24,13 +24,13 @@ lint:
     - actionlint@1.7.10
     - bandit@1.9.3
     - black@26.1.0
-    - checkov@3.2.497
+    - checkov@3.2.500
     - git-diff-check
     - isort@7.0.0
     - markdownlint@0.47.0
     - osv-scanner@2.3.1
     - prettier@3.8.1
-    - ruff@0.14.13
+    - ruff@0.15.0
     - trufflehog@3.92.4
     - yamllint@1.38.0
 actions:
