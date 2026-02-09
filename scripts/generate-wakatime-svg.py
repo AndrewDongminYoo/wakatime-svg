@@ -5,6 +5,7 @@ and writes SVG files into the generated/ directory.
 """
 
 import html
+import json
 import math
 import os
 import re
@@ -37,6 +38,8 @@ DEFAULT_DURATION_COL_WIDTH = 70
 DEFAULT_PROJECT_NAME_COL_WIDTH = 120
 DEFAULT_PROJECT_DURATION_COL_WIDTH = 54
 DEFAULT_BAR_HEIGHT = 8
+
+is_ci = os.getenv("CI", "").lower() == "true" or os.getenv("GITHUB_ACTIONS") == "true"
 
 
 def env_str(name: str, default: str) -> str:
@@ -137,6 +140,9 @@ def fetch_stats(api_key: str) -> dict:
     url = f"{API_BASE}/v1/users/current/stats/last_7_days"
     r = requests.get(url, headers={"Authorization": f"Basic {api_key}"}, timeout=30)
     r.raise_for_status()
+    if not is_ci:
+        with open("last_7_days.json", "w", encoding="utf-8") as handle:
+            json.dump(r.json()["data"], handle, indent=2)
     return r.json()["data"]
 
 
