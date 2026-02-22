@@ -1,0 +1,255 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="384" height="230">
+  <style>
+    svg {
+      font-family:
+        -apple-system,
+        BlinkMacSystemFont,
+        Segoe UI,
+        Helvetica,
+        Arial,
+        sans-serif,
+        Apple Color Emoji,
+        Segoe UI Emoji;
+      font-size: 14px;
+      line-height: 21px;
+    }
+
+    #background {
+      fill: #00000000;
+      stroke: #8B8B8B22;
+      stroke-width: 1px;
+    }
+
+    foreignObject {
+      width: 328px;
+      height: 182px;
+    }
+
+    .wrap {
+      width: 100%;
+      height: 100%;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+
+    h2 {
+      margin-top: 0;
+      margin-bottom: 10px;
+      line-height: 28px;
+      font-size: 16px;
+      font-weight: 600;
+      color: rgb(72, 148, 224);
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+
+    .rows {
+      list-style: none;
+      padding: 0;
+      margin: 0;
+    }
+
+    .row {
+      display: grid;
+      gap: 10px;
+      align-items: center;
+      height: 26px;
+
+      transform: translateX(-500%);
+      animation-name: slideIn;
+      animation-duration: 1s;
+      animation-function: ease-in-out;
+      animation-fill-mode: forwards;
+    }
+
+    .row.language {
+      grid-template-columns: 5px 70px 60px 1fr 42px;
+    }
+
+    .row.project {
+      grid-template-columns: minmax(70px, 1.3fr) 1fr 60px;
+    }
+
+    @keyframes slideIn {
+      to {
+        transform: translateX(0);
+      }
+    }
+
+    .dot {
+      width: 10px;
+      height: 10px;
+      border-radius: 999px;
+      display: inline-block;
+      box-shadow: 0 0 0 1px #00000012;
+    }
+
+    .lang {
+      font-size: 12px;
+      font-weight: 600;
+      color: rgb(135, 135, 135);
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+
+    .time {
+      font-size: 12px;
+      color: rgb(150, 150, 150);
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+
+    .project-time {
+      text-align: right;
+      font-variant-numeric: tabular-nums;
+      letter-spacing: -0.05rem;
+    }
+
+    .percent {
+      font-size: 12px;
+      color: rgb(150, 150, 150);
+      text-align: right;
+      font-variant-numeric: tabular-nums;
+    }
+
+    .bar-background {
+      display: flex;
+      height: 8px;
+      border-radius: 999px;
+      background: #8B8B8B22;
+      overflow: hidden;
+    }
+
+    .bar-fill {
+      display: block;
+      height: 100%;
+      border-radius: 999px 0 0 999px;
+      opacity: 0.9;
+      flex: 0 0 auto;
+      position: relative;
+      --bar-cap-size: 8px;
+    }
+
+    .bar-fill::after {
+      content: "";
+      position: absolute;
+      right: calc(var(--bar-cap-size) / -2);
+      width: var(--bar-cap-size);
+      height: 100%;
+      background: inherit;
+      border-radius: 999px;
+    }
+
+    .bar-fill-full {
+      border-radius: 999px;
+    }
+
+    .bar-fill-full::after,
+    .bar-fill-empty::after {
+      display: none;
+    }
+
+    .bar-fill-empty {
+      display: none;
+    }
+
+    .bar-additions,
+    .bar-deletions {
+      display: block;
+      height: 100%;
+      flex: 0 0 auto;
+    }
+
+    .bar-additions {
+      background: #23d18b;
+    }
+
+    .bar-deletions {
+      background: #f37c7c;
+    }
+  </style>
+
+  <rect
+    id="background"
+    x="12"
+    y="12"
+    rx="6"
+    ry="6"
+    width="360"
+    height="206"
+    fill="none"
+    stroke="#8B8B8B22"
+    stroke-width="1"
+  />
+
+  <foreignObject
+    x="28"
+    y="24"
+    width="328"
+    height="182"
+  >
+    <div xmlns="http://www.w3.org/1999/xhtml" class="wrap">
+      <h2>Languages · 58 hours 41 minutes</h2>
+      <ul class="rows">
+        <li class="row language" style="animation-delay:0ms;">
+          <span class="dot" style="background:#3178c6;"/>
+          <span class="lang" title="TypeScript">TypeScript</span>
+          <span class="time" title="15 h 57 m">15 h 57 m</span>
+          <span class="bar">
+            <span class="bar-background">
+              <span class="bar-fill" style="width:38.2313%; background:#3178c6;"/>
+            </span>
+          </span>
+          <span class="percent">27.2%</span>
+        </li>
+        <li class="row language" style="animation-delay:150ms;">
+          <span class="dot" style="background:#00B4AB;"/>
+          <span class="lang" title="Dart">Dart</span>
+          <span class="time" title="13 h 36 m">13 h 36 m</span>
+          <span class="bar">
+            <span class="bar-background">
+              <span class="bar-fill" style="width:32.5951%; background:#00B4AB;"/>
+            </span>
+          </span>
+          <span class="percent">23.2%</span>
+        </li>
+        <li class="row language" style="animation-delay:300ms;">
+          <span class="dot" style="background:#083fa1;"/>
+          <span class="lang" title="Markdown">Markdown</span>
+          <span class="time" title="5 h 31 m">5 h 31 m</span>
+          <span class="bar">
+            <span class="bar-background">
+              <span class="bar-fill" style="width:13.2508%; background:#083fa1;"/>
+            </span>
+          </span>
+          <span class="percent">9.4%</span>
+        </li>
+        <li class="row language" style="animation-delay:450ms;">
+          <span class="dot" style="background:#cb171e;"/>
+          <span class="lang" title="YAML">YAML</span>
+          <span class="time" title="4 h 56 m">4 h 56 m</span>
+          <span class="bar">
+            <span class="bar-background">
+              <span class="bar-fill" style="width:11.8334%; background:#cb171e;"/>
+            </span>
+          </span>
+          <span class="percent">8.4%</span>
+        </li>
+        <li class="row language" style="animation-delay:600ms;">
+          <span class="dot" style="background:#6866fb;"/>
+          <span class="lang" title="Objective-C++">Objective-C++</span>
+          <span class="time" title="1 h 42 m">1 h 42 m</span>
+          <span class="bar">
+            <span class="bar-background">
+              <span class="bar-fill" style="width:4.0894%; background:#6866fb;"/>
+            </span>
+          </span>
+          <span class="percent">2.9%</span>
+        </li>
+      </ul>
+    </div>
+  </foreignObject>
+</svg>
