@@ -1,0 +1,250 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="384" height="230">
+  <style>
+    svg {
+      font-family:
+        -apple-system,
+        BlinkMacSystemFont,
+        Segoe UI,
+        Helvetica,
+        Arial,
+        sans-serif,
+        Apple Color Emoji,
+        Segoe UI Emoji;
+      font-size: 14px;
+      line-height: 21px;
+    }
+
+    #background {
+      fill: #00000000;
+      stroke: #8B8B8B22;
+      stroke-width: 1px;
+    }
+
+    foreignObject {
+      width: 328px;
+      height: 182px;
+    }
+
+    .wrap {
+      width: 100%;
+      height: 100%;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+
+    h2 {
+      margin-top: 0;
+      margin-bottom: 10px;
+      line-height: 28px;
+      font-size: 16px;
+      font-weight: 600;
+      color: rgb(72, 148, 224);
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+
+    .rows {
+      list-style: none;
+      padding: 0;
+      margin: 0;
+    }
+
+    .row {
+      display: grid;
+      gap: 10px;
+      align-items: center;
+      height: 26px;
+
+      transform: translateX(-500%);
+      animation-name: slideIn;
+      animation-duration: 1s;
+      animation-function: ease-in-out;
+      animation-fill-mode: forwards;
+    }
+
+    .row.language {
+      grid-template-columns: 5px 70px 60px 1fr 42px;
+    }
+
+    .row.project {
+      grid-template-columns: minmax(70px, 1.3fr) 1fr 60px;
+    }
+
+    @keyframes slideIn {
+      to {
+        transform: translateX(0);
+      }
+    }
+
+    .dot {
+      width: 10px;
+      height: 10px;
+      border-radius: 999px;
+      display: inline-block;
+      box-shadow: 0 0 0 1px #00000012;
+    }
+
+    .lang {
+      font-size: 12px;
+      font-weight: 600;
+      color: rgb(135, 135, 135);
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+
+    .time {
+      font-size: 12px;
+      color: rgb(150, 150, 150);
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+
+    .project-time {
+      text-align: right;
+      font-variant-numeric: tabular-nums;
+      letter-spacing: -0.05rem;
+    }
+
+    .percent {
+      font-size: 12px;
+      color: rgb(150, 150, 150);
+      text-align: right;
+      font-variant-numeric: tabular-nums;
+    }
+
+    .bar-background {
+      display: flex;
+      height: 8px;
+      border-radius: 999px;
+      background: #8B8B8B22;
+      overflow: hidden;
+    }
+
+    .bar-fill {
+      display: block;
+      height: 100%;
+      border-radius: 999px 0 0 999px;
+      opacity: 0.9;
+      flex: 0 0 auto;
+      position: relative;
+      --bar-cap-size: 8px;
+    }
+
+    .bar-fill::after {
+      content: "";
+      position: absolute;
+      right: calc(var(--bar-cap-size) / -2);
+      width: var(--bar-cap-size);
+      height: 100%;
+      background: inherit;
+      border-radius: 999px;
+    }
+
+    .bar-fill-full {
+      border-radius: 999px;
+    }
+
+    .bar-fill-full::after,
+    .bar-fill-empty::after {
+      display: none;
+    }
+
+    .bar-fill-empty {
+      display: none;
+    }
+
+    .bar-additions,
+    .bar-deletions {
+      display: block;
+      height: 100%;
+      flex: 0 0 auto;
+    }
+
+    .bar-additions {
+      background: #23d18b;
+    }
+
+    .bar-deletions {
+      background: #f37c7c;
+    }
+  </style>
+
+  <rect
+    id="background"
+    x="12"
+    y="12"
+    rx="6"
+    ry="6"
+    width="360"
+    height="206"
+    fill="none"
+    stroke="#8B8B8B22"
+    stroke-width="1"
+  />
+
+  <foreignObject
+    x="28"
+    y="24"
+    width="328"
+    height="182"
+  >
+    <div xmlns="http://www.w3.org/1999/xhtml" class="wrap">
+      <h2>Projects (+/-) · 45 hours 4 minutes</h2>
+      <ul class="rows">
+        <li class="row project" style="animation-delay:0ms;">
+          <span class="lang" title="youngkeul-rn-app">youngkeul-rn-app</span>
+          <span class="bar" title="+ 57% / - 43%">
+            <span class="bar-background">
+              <span class="bar-additions" style="width:57.2855%;"></span>
+              <span class="bar-deletions" style="width:42.7145%;"></span>
+            </span>
+          </span>
+          <span class="time project-time" title="16 h 36 m">16 h 36 m</span>
+        </li>
+        <li class="row project" style="animation-delay:150ms;">
+          <span class="lang" title="mirae">mirae</span>
+          <span class="bar" title="+ 93% / - 7%">
+            <span class="bar-background">
+              <span class="bar-additions" style="width:92.9177%;"></span>
+              <span class="bar-deletions" style="width:7.0823%;"></span>
+            </span>
+          </span>
+          <span class="time project-time" title="4 h 51 m">4 h 51 m</span>
+        </li>
+        <li class="row project" style="animation-delay:300ms;">
+          <span class="lang" title="warm_alarm">warm_alarm</span>
+          <span class="bar" title="+ 85% / - 15%">
+            <span class="bar-background">
+              <span class="bar-additions" style="width:85.2273%;"></span>
+              <span class="bar-deletions" style="width:14.7727%;"></span>
+            </span>
+          </span>
+          <span class="time project-time" title="4 h 47 m">4 h 47 m</span>
+        </li>
+        <li class="row project" style="animation-delay:450ms;">
+          <span class="lang" title="github-stats-transparent">github-stats-transparent</span>
+          <span class="bar" title="+ 81% / - 19%">
+            <span class="bar-background">
+              <span class="bar-additions" style="width:80.7715%;"></span>
+              <span class="bar-deletions" style="width:19.2285%;"></span>
+            </span>
+          </span>
+          <span class="time project-time" title="3 h 36 m">3 h 36 m</span>
+        </li>
+        <li class="row project" style="animation-delay:600ms;">
+          <span class="lang" title="Jarvis">Jarvis</span>
+          <span class="bar" title="+ 97% / - 3%">
+            <span class="bar-background">
+              <span class="bar-additions" style="width:97.4890%;"></span>
+              <span class="bar-deletions" style="width:2.5110%;"></span>
+            </span>
+          </span>
+          <span class="time project-time" title="3 h 35 m">3 h 35 m</span>
+        </li>
+      </ul>
+    </div>
+  </foreignObject>
+</svg>
