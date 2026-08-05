@@ -1,4 +1,5 @@
 {
+  "cSpell.words": ["athul", "pyproject"],
   "yaml.schemas": {
     "https://json.schemastore.org/github-action.json": "action.yml"
   }
