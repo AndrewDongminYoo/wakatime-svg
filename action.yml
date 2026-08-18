@@ -24,7 +24,7 @@ inputs:
   WAKATIME_CHART_WIDTH:
     description: Optional. Card width (px).
     required: false
-    default: "360"
+    default: "350"
   WAKATIME_CHART_HEIGHT:
     description: Optional. Card height (px) when dynamic height is false.
     required: false
@@ -48,7 +48,7 @@ inputs:
   WAKATIME_CHART_PADDING:
     description: Optional. Outer padding around the card (px).
     required: false
-    default: "12"
+    default: "5"
   WAKATIME_CHART_COL_NAME_WIDTH:
     description: Optional. Name column width (px).
     required: false
