@@ -107,7 +107,7 @@ You can customize how `Unknown Project` rows appear using `WAKATIME_PRIVATE_PROJ
 ## Why this action
 
 - Transparent SVGs blend nicely on both light and dark themes.
-- Mobile-friendly default width (360px) keeps cards readable in apps.
+- Mobile-friendly default size (360px image) keeps cards readable in apps, and matches `github-stats-transparent` so both line up on a profile README.
 - Shows both languages and projects, with bars you can compare at a glance.
 - Simple setup: defaults are sane, but layout can be fully customized.
 
