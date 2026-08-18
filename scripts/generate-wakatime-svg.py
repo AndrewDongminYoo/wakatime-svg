@@ -13,9 +13,8 @@ import re
 import requests
 
 API_BASE = "https://wakatime.com/api"
-ADDITIONS_BAR_COLOR = "#23d18b"
 DEFAULT_BAR_COLOR = "#d0d7de"
-DELETIONS_BAR_COLOR = "#f37c7c"
+PROJECT_BAR_COLOR = "#4894e0"
 LANGUAGES_SVG_NAME = "languages.svg"
 PROJECTS_SVG_NAME = "projects.svg"
 UNKNOWN_PROJECT_PLACEHOLDER = "Unknown Project"
@@ -231,22 +230,13 @@ def prepare_language_items(items: list[dict], limit: int) -> list[dict]:
     return normalize_language_percent(top_items)
 
 
-def additions_deletions_ratio(item: dict) -> tuple[float, float]:
-    """Return additions vs deletions percentages based on change totals."""
-    ai_additions = float(item.get("ai_additions") or 0)
-    ai_deletions = float(item.get("ai_deletions") or 0)
-    human_additions = float(item.get("human_additions") or 0)
-    human_deletions = float(item.get("human_deletions") or 0)
-
-    additions = max(0.0, human_additions + ai_additions)
-    deletions = max(0.0, human_deletions + ai_deletions)
-    total = additions + deletions
-    if total <= 0:
-        return 0.0, 0.0
-
-    additions_pct = clamp_pct(additions / total * 100.0)
-    deletions_pct = clamp_pct(100.0 - additions_pct)
-    return additions_pct, deletions_pct
+def bar_fill_class(percent: float) -> str:
+    """Return the bar CSS classes for a fill percentage."""
+    if percent <= 0.0:
+        return "bar-fill bar-fill-empty"
+    if percent >= 99.5:
+        return "bar-fill bar-fill-full"
+    return "bar-fill"
 
 
 def is_unknown_project_name(raw_name: str) -> bool:
@@ -302,11 +292,7 @@ def build_language_rows(items: list[dict], colors: dict[str, str]) -> str:
         percent = clamp_pct(item.get("percent") or 0.0)
         raw_percent = clamp_pct(item.get("percent_raw", item.get("percent") or 0.0))
         percent_text = f"{raw_percent:.1f}%"
-        bar_class = "bar-fill"
-        if percent <= 0.0:
-            bar_class += " bar-fill-empty"
-        elif percent >= 99.5:
-            bar_class += " bar-fill-full"
+        bar_class = bar_fill_class(percent)
 
         color = esc(colors.get(raw_name, DEFAULT_BAR_COLOR))
 
@@ -327,7 +313,13 @@ def build_language_rows(items: list[dict], colors: dict[str, str]) -> str:
 
 
 def build_project_rows(items: list[dict], private_label: str | None) -> str:
-    """Build the HTML list items for the project stats."""
+    """Build the HTML list items for the project stats.
+
+    Bars are scaled against the busiest project so the ranking stays readable on
+    a short track.
+    """
+    busiest = max((parse_total_seconds(item) for item in items), default=0.0)
+
     rows_html = []
     for i, item in enumerate(items):
         raw_name = (item.get("name") or "").strip()
@@ -336,16 +328,15 @@ def build_project_rows(items: list[dict], private_label: str | None) -> str:
 
         time_text = compact_time_text(item.get("text") or "")
 
-        additions_pct, deletions_pct = additions_deletions_ratio(item)
-        bar_title = esc(f"+ {additions_pct:.0f}% / - {deletions_pct:.0f}%")
+        seconds = parse_total_seconds(item)
+        percent = clamp_pct(seconds / busiest * 100.0) if busiest > 0 else 0.0
 
         rows_html.append(f"""
         <li class="row project" style="animation-delay:{i * 150}ms;">
           <span class="lang" title="{name}">{name}</span>
-          <span class="bar" title="{bar_title}">
+          <span class="bar">
             <span class="bar-background">
-              <span class="bar-additions" style="width:{additions_pct:.4f}%;"></span>
-              <span class="bar-deletions" style="width:{deletions_pct:.4f}%;"></span>
+              <span class="{bar_fill_class(percent)}" style="width:{percent:.4f}%; background:{PROJECT_BAR_COLOR};"/>
             </span>
           </span>
           <span class="time project-time" title="{time_text}">{time_text}</span>
@@ -549,21 +540,6 @@ def render_svg(title: str, rows_html: str, row_count: int, config: dict) -> str:
     .bar-fill-empty {{
       display: none;
     }}
-
-    .bar-additions,
-    .bar-deletions {{
-      display: block;
-      height: 100%;
-      flex: 0 0 auto;
-    }}
-
-    .bar-additions {{
-      background: {ADDITIONS_BAR_COLOR};
-    }}
-
-    .bar-deletions {{
-      background: {DELETIONS_BAR_COLOR};
-    }}
   </style>
 
   <rect
@@ -637,7 +613,7 @@ def main() -> None:
     total_text = total_text.replace("min", "minute")
 
     languages_title = f"Languages · {total_text}"
-    projects_title = f"Projects (+/-) · {total_text}"
+    projects_title = f"Projects · {total_text}"
 
     languages_rows = build_language_rows(languages, language_colors)
     projects_rows = build_project_rows(projects, private_project_label)
