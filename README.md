@@ -7,7 +7,7 @@ Generate SVG cards from WakaTime stats for the last 7 days. GitHub Actions refre
 ## Key Features
 
 - Visualizes the top 5 languages by time and percentage
-- Visualizes the top 5 projects by time, with additions vs deletions ratios
+- Visualizes the top 5 projects by time, with each bar scaled against the busiest project
 - Language color mapping with percentage bars
 - Daily scheduled refresh (00:00 UTC)
 
@@ -108,7 +108,7 @@ You can customize how `Unknown Project` rows appear using `WAKATIME_PRIVATE_PROJ
 
 - Transparent SVGs blend nicely on both light and dark themes.
 - Mobile-friendly default width (360px) keeps cards readable in apps.
-- Shows both languages and projects (with additions/deletions split for projects).
+- Shows both languages and projects, with bars you can compare at a glance.
 - Simple setup: defaults are sane, but layout can be fully customized.
 
 ## Inspiration
