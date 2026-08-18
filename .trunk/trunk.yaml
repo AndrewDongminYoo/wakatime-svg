@@ -16,23 +16,28 @@ runtimes:
     - python@3.14.4
 # This is the section where you manage your linters. (https://docs.trunk.io/check/configuration)
 lint:
+  ignore:
+    # Tests assert on purpose; bandit's B101 is noise there.
+    - linters: [bandit]
+      paths:
+        - tests/**
   disabled:
     - svgo
   enabled:
     - pinact@4.1.1
-    - oxipng@10.1.1
+    - oxipng@10.2.0
     - taplo@0.10.0
     - actionlint@1.7.12
     - bandit@1.9.4
     - black@26.5.1
-    - checkov@3.3.8
+    - checkov@3.3.11
     - git-diff-check
     - isort@8.0.1
     - markdownlint@0.49.1
     - osv-scanner@2.4.0
     - prettier@3.9.6
-    - ruff@0.16.1
-    - trufflehog@3.96.0
+    - ruff@0.16.3
+    - trufflehog@3.97.0
     - yamllint@1.38.0
 actions:
   enabled:

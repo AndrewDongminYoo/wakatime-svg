@@ -21,7 +21,8 @@
 
 ## Testing Guidelines
 
-- No automated tests are configured. If you add tests, place them in `tests/` and name files `test_*.py`.
+- `python tests/test_project_rows.py` checks that project bars encode time share; it needs no API key.
+- Place new tests in `tests/` and name files `test_*.py`.
 - Document new test commands in this file and keep them runnable from the repo root.
 
 ## Commit & Pull Request Guidelines
