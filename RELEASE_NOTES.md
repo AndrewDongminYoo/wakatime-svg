@@ -1,5 +1,13 @@
 # Release Notes
 
+## v1.3.0 - 2026-08-19
+
+### Fixes
+
+- Project bars now encode time worked, scaled against the busiest project.
+  They previously showed an additions-vs-deletions ratio, but WakaTime reports no deletions, so every project drew an identical full-width bar no matter how long it was worked on.
+  The projects card title drops the now-meaningless `(+/-)` marker.
+
 ## v1.2.0 - 2026-01-22
 
 ### Improvements
