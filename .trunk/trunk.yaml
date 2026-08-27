@@ -23,8 +23,8 @@ lint:
         - tests/**
   disabled:
     - svgo
+    - pinact
   enabled:
-    - pinact@4.1.1
     - oxipng@10.2.0
     - taplo@0.10.0
     - actionlint@1.7.12
