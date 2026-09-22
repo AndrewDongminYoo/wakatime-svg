@@ -23,7 +23,7 @@ Generate SVG cards from WakaTime stats for the last 7 days. GitHub Actions refre
 1. Install Python 3.14+
 2. Install dependencies
    ```bash
-   python -m pip install requests
+   uv sync --frozen
    ```
 3. Set environment variable
    ```bash
@@ -32,7 +32,7 @@ Generate SVG cards from WakaTime stats for the last 7 days. GitHub Actions refre
 4. Generate SVGs
    ```bash
    mkdir -p generated
-   python scripts/generate-wakatime-svg.py
+   uv run --frozen python scripts/generate-wakatime-svg.py
    ```
    Output: `generated/languages.svg`, `generated/projects.svg`
 
