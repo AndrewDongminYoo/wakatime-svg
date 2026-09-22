@@ -9,8 +9,8 @@
 
 ## Build, Test, and Development Commands
 
-- `python -m pip install requests` installs the only runtime dependency.
-- `WAKATIME_API_KEY=... python scripts/generate-wakatime-svg.py` generates the SVGs locally.
+- `uv sync --frozen` installs the locked runtime dependencies.
+- `WAKATIME_API_KEY=... uv run --frozen python scripts/generate-wakatime-svg.py` generates the SVGs locally.
 - `trunk fmt` formats code; `trunk check` runs linters (Black, isort, ruff, etc.) as configured in `.trunk/trunk.yaml`.
 
 ## Coding Style & Naming Conventions
@@ -21,7 +21,7 @@
 
 ## Testing Guidelines
 
-- `python tests/test_project_rows.py` checks that project bars encode time share; it needs no API key.
+- `uv run --frozen python tests/test_project_rows.py` checks that project bars encode time share; it needs no API key.
 - Place new tests in `tests/` and name files `test_*.py`.
 - Document new test commands in this file and keep them runnable from the repo root.
 
