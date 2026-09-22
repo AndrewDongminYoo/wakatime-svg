@@ -89,12 +89,11 @@ runs:
       uses: actions/setup-python@v5
       with:
         python-version: "3.14"
-        cache: pip
+    - name: Set up uv
+      uses: astral-sh/setup-uv@v10
     - name: Install dependencies
       shell: bash
-      run: |
-        python -m pip install --upgrade pip
-        pip install requests
+      run: uv sync --frozen --project "${{ github.action_path }}"
     - name: Generate SVGs
       shell: bash
       env:
@@ -116,7 +115,7 @@ runs:
         IMAGES_FOLDER: ${{ inputs.IMAGES_FOLDER }}
       run: |
         mkdir -p "${IMAGES_FOLDER}"
-        python "${{ github.action_path }}/scripts/generate-wakatime-svg.py"
+        uv run --frozen --project "${{ github.action_path }}" python "${{ github.action_path }}/scripts/generate-wakatime-svg.py"
     - name: Publish SVGs to output branch
       shell: bash
       env:
