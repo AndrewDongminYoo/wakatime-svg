@@ -90,7 +90,7 @@ runs:
       with:
         python-version: "3.14"
     - name: Set up uv
-      uses: astral-sh/setup-uv@v10
+      uses: astral-sh/setup-uv@v10.2.0
     - name: Install dependencies
       shell: bash
       run: uv sync --frozen --project "${{ github.action_path }}"
