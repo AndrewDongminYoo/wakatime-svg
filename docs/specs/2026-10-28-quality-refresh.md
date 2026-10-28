@@ -12,8 +12,12 @@ Do not add runtime dependencies or change the Python `3.14` selection.
 Update the existing OSV Scanner, oxipng and TruffleHog pins to `2.7.0`, `10.2.1` and `3.99.7` respectively.
 Preserve Trunk CLI `1.25.0`, plugin ref `v1.11.0`, the configured runtimes and the deliberate Grype/SVGO exclusions unless a concrete incompatibility requires a scoped repair.
 Keep the Bandit test exclusion because the offline regression tests intentionally use assertions.
-Override only TruffleHog's scan command to use `--no-verification` instead of `--only-verified`.
-Preserve its JSON output, failure exit behavior and existing JSON-to-SARIF reader.
+Use `--no-verification` instead of `--only-verified` in TruffleHog's scan command.
+Preserve its JSON output, inherited SARIF handling, success codes and `copy_targets` sandbox.
+Replace the inherited JSON-to-SARIF reader with the reviewed local filesystem reader from `rn-typed-assets` so decoded findings remain visible when the raw value does not occur literally in the file.
+Use `direct_configs` to include the reader in Trunk's configuration and cache inputs.
+Keep its standard-library tests in `.trunk/configs/tests/` and run them in CI before dependency installation.
+Retain the existing `tests/**` Bandit exclusion; suppress only the observed subprocess import and invocation warnings on the two test lines that exercise the reader's command-line boundary without a shell.
 
 ## Acceptance
 
@@ -24,6 +28,8 @@ Preserve its JSON output, failure exit behavior and existing JSON-to-SARIF reade
 - Direct OSV scanning of `uv.lock` reports every resolved PyPI package, with package names and versions compared against the lockfile.
 - Coverage validation rejects a report with an omitted package before accepting the real report.
 - A synthetic fake canary reaches the configured TruffleHog JSON-to-SARIF reader without live credential verification; a clean fixture reports no finding.
+- The inherited reader fails the decoded-only regression before the local reader passes all 10 filesystem-reader tests.
+- Direct cached scanner/reader controls retain encoded and literal synthetic findings, omit their values from SARIF and keep clean input empty.
 - No API key, real WakaTime response or generated chart is needed for local verification.
 
 ## Verification Boundaries
@@ -33,6 +39,12 @@ Use the already installed managed Python interpreter and disable Python download
 The synthetic regression tests inspect project-row bar widths; they do not verify WakaTime network access or the publishing action.
 Do not execute the live generator or the output-branch publisher.
 Disable Pinact's automatic GitHub CLI credential lookup during local checks while keeping its locked `lint` and `upgrade` commands enabled.
+An unauthenticated public-metadata request hit GitHub's API rate limit during the final scan.
+The retry supplies the existing GitHub credential only to the child process for public Action metadata while keeping automatic lookup disabled.
+No credential value is logged and no WakaTime API key or publishing path is used.
+The setup-uv references in CI and the public Action use the verified `v10.3.3` commit.
+The reader follow-up uses only the 10 standard-library reader tests, cached checks on the explicit changed files and offline scanner/reader controls while the shared heavy-job slot is unavailable.
+The root agent runs the configured-Trunk controls, full scan and final review.
 
 ## Sources and Precedent
 

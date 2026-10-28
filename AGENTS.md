@@ -23,7 +23,8 @@
 ## Testing Guidelines
 
 - `uv run --frozen python tests/test_project_rows.py` checks that project bars encode time share; it needs no API key.
-- Place new tests in `tests/` and name files `test_*.py`.
+- `python3 .trunk/configs/tests/test_trufflehog_to_sarif.py` runs the offline filesystem JSONL reader regression tests with the standard library only.
+- Place application tests in `tests/` and Trunk reader tests in `.trunk/configs/tests/`; name files `test_*.py`.
 - Document new test commands in this file and keep them runnable from the repo root.
 
 ## Commit & Pull Request Guidelines
@@ -37,3 +38,4 @@
 - Provide `WAKATIME_API_KEY` via environment variables only; never commit secrets.
 - GitHub Actions expects the key in `secrets.WAKATIME_API_KEY`.
 - TruffleHog scans files with `--no-verification` so candidate credentials are not sent to verification endpoints.
+- Its local JSONL reader retains decoded findings at file level when the raw value is absent from the file and omits secret values from SARIF messages.
