@@ -11,7 +11,8 @@
 
 - `uv sync --frozen` installs the locked runtime dependencies.
 - `WAKATIME_API_KEY=... uv run --frozen python scripts/generate-wakatime-svg.py` generates the SVGs locally.
-- `trunk fmt` formats code; `trunk check` runs linters (Black, isort, ruff, etc.) as configured in `.trunk/trunk.yaml`.
+- `trunk fmt <paths>` formats explicitly selected files; `trunk check --no-fix` runs the configured linters on changed files without applying fixes.
+- `trunk check --all --no-fix --jobs=2` checks the full repository during quality-tooling maintenance.
 
 ## Coding Style & Naming Conventions
 
@@ -35,3 +36,4 @@
 
 - Provide `WAKATIME_API_KEY` via environment variables only; never commit secrets.
 - GitHub Actions expects the key in `secrets.WAKATIME_API_KEY`.
+- TruffleHog scans files with `--no-verification` so candidate credentials are not sent to verification endpoints.
