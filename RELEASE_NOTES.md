@@ -1,5 +1,18 @@
 # Release Notes
 
+## v1.5.0 - 2026-10-29
+
+### Action Required
+
+- From 2026-11-01 WakaTime API keys only work for editor plugins, and the stats request returns 403 when it authenticates with one.
+  Generate a personal OAuth token at <https://wakatime.com/oauth> and store it in the `WAKATIME_API_KEY` secret in place of the API key.
+  The input keeps its name, and you don't need to publish an OAuth app for personal use.
+
+### Improvements
+
+- Personal OAuth tokens (`waka_tok_...`) are sent as `Authorization: Bearer`, the header WakaTime documents for OAuth tokens.
+  Other values are still sent as before, so an API key keeps working until the cutover.
+
 ## v1.4.0 - 2026-08-19
 
 ### Improvements

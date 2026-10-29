@@ -65,7 +65,7 @@ jobs:
   update-charts:
     runs-on: ubuntu-latest
     steps:
-      - uses: AndrewDongminYoo/wakatime-svg@v1.4.0
+      - uses: AndrewDongminYoo/wakatime-svg@v1.5.0
         with:
           WAKATIME_API_KEY: ${{ secrets.WAKATIME_API_KEY }}
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
@@ -90,7 +90,7 @@ jobs:
   update-charts:
     runs-on: ubuntu-latest
     steps:
-      - uses: AndrewDongminYoo/wakatime-svg@v1.4.0
+      - uses: AndrewDongminYoo/wakatime-svg@v1.5.0
         with:
           WAKATIME_API_KEY: ${{ secrets.WAKATIME_API_KEY }}
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
