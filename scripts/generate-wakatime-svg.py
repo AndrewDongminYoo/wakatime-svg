@@ -1,6 +1,7 @@
 """Generate WakaTime SVG cards for recent language and project stats.
 
-Reads the WAKATIME_API_KEY environment variable, fetches last 7 days of data,
+Reads the WAKATIME_API_KEY environment variable (a personal OAuth token),
+fetches last 7 days of data,
 and writes SVG files into the generated/ directory.
 """
 
@@ -13,6 +14,7 @@ import re
 import requests
 
 API_BASE = "https://wakatime.com/api"
+OAUTH_TOKEN_PREFIX = "waka_tok_"  # nosec B105 - Public token prefix, not a secret.
 DEFAULT_BAR_COLOR = "#d0d7de"
 PROJECT_BAR_COLOR = "#4894e0"
 LANGUAGES_SVG_NAME = "languages.svg"
@@ -137,10 +139,22 @@ def load_chart_config() -> dict[str, int | bool]:
     }
 
 
+def auth_headers(api_key: str) -> dict[str, str]:
+    """Build the Authorization header for a personal OAuth token or legacy API key.
+
+    WakaTime limits API keys to plugins from 2026-11-01; personal OAuth tokens
+    (``waka_tok_...``) are sent as Bearer tokens.
+    """
+    token = api_key.strip()
+    if token.startswith(OAUTH_TOKEN_PREFIX):
+        return {"Authorization": f"Bearer {token}"}
+    return {"Authorization": f"Basic {token}"}
+
+
 def fetch_stats(api_key: str) -> dict:
-    """Fetch WakaTime stats for the last 7 days using the API key."""
+    """Fetch WakaTime stats for the last 7 days using the OAuth token."""
     url = f"{API_BASE}/v1/users/current/stats/last_7_days"
-    r = requests.get(url, headers={"Authorization": f"Basic {api_key}"}, timeout=30)
+    r = requests.get(url, headers=auth_headers(api_key), timeout=30)
     r.raise_for_status()
     if not is_ci:
         with open("last_7_days.json", "w", encoding="utf-8") as handle:
@@ -151,7 +165,7 @@ def fetch_stats(api_key: str) -> dict:
 def fetch_languages(api_key: str) -> dict:
     """Fetch language color metadata and return a name->color mapping."""
     url = f"{API_BASE}/v1/program_languages"
-    r = requests.get(url, headers={"Authorization": f"Basic {api_key}"}, timeout=30)
+    r = requests.get(url, headers=auth_headers(api_key), timeout=30)
     r.raise_for_status()
 
     lang_colors: dict[str, str] = {}

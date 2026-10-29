@@ -27,8 +27,11 @@ Generate SVG cards from WakaTime stats for the last 7 days. GitHub Actions refre
    ```
 3. Set environment variable
    ```bash
-   export WAKATIME_API_KEY=YOUR_KEY
+   export WAKATIME_API_KEY=YOUR_PERSONAL_OAUTH_TOKEN
    ```
+   Use the personal OAuth token (`waka_tok_...`) from <https://wakatime.com/oauth>, not the API key.
+   From 2026-11-01 WakaTime API keys only work for editor plugins and return 403 here.
+   You don't need to publish an OAuth app for personal use.
 4. Generate SVGs
    ```bash
    mkdir -p generated
@@ -38,7 +41,7 @@ Generate SVG cards from WakaTime stats for the last 7 days. GitHub Actions refre
 
 ## GitHub Actions Setup
 
-1. Add `WAKATIME_API_KEY` to repository Secrets
+1. Add your personal OAuth token to repository Secrets as `WAKATIME_API_KEY` (the input keeps its name)
 2. Enable Actions for the repo
 3. Run the `Generate WakaTime SVG` workflow manually or wait for the schedule
 4. Confirm `generated/languages.svg` and `generated/projects.svg` appear on the `output` branch
@@ -62,7 +65,7 @@ jobs:
   update-charts:
     runs-on: ubuntu-latest
     steps:
-      - uses: AndrewDongminYoo/wakatime-svg@v1.4.0
+      - uses: AndrewDongminYoo/wakatime-svg@v1.5.0
         with:
           WAKATIME_API_KEY: ${{ secrets.WAKATIME_API_KEY }}
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
@@ -87,7 +90,7 @@ jobs:
   update-charts:
     runs-on: ubuntu-latest
     steps:
-      - uses: AndrewDongminYoo/wakatime-svg@v1.4.0
+      - uses: AndrewDongminYoo/wakatime-svg@v1.5.0
         with:
           WAKATIME_API_KEY: ${{ secrets.WAKATIME_API_KEY }}
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
@@ -155,4 +158,4 @@ Please open an Issue and include:
 - Full error logs
 - Expected vs actual behavior
 
-Never share your `WAKATIME_API_KEY`.
+Never share your `WAKATIME_API_KEY` token.
