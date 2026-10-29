@@ -11,7 +11,8 @@
 
 - `uv sync --frozen` installs the locked runtime dependencies.
 - `WAKATIME_API_KEY=... uv run --frozen python scripts/generate-wakatime-svg.py` generates the SVGs locally.
-- `trunk fmt` formats code; `trunk check` runs linters (Black, isort, ruff, etc.) as configured in `.trunk/trunk.yaml`.
+- `trunk fmt <paths>` formats explicitly selected files; `trunk check --no-fix` runs the configured linters on changed files without applying fixes.
+- `trunk check --all --no-fix --jobs=2` checks the full repository during quality-tooling maintenance.
 
 ## Coding Style & Naming Conventions
 
@@ -22,7 +23,8 @@
 ## Testing Guidelines
 
 - `uv run --frozen python tests/test_project_rows.py` checks that project bars encode time share; it needs no API key.
-- Place new tests in `tests/` and name files `test_*.py`.
+- `python3 .trunk/configs/tests/test_trufflehog_to_sarif.py` runs the offline filesystem JSONL reader regression tests with the standard library only.
+- Place application tests in `tests/` and Trunk reader tests in `.trunk/configs/tests/`; name files `test_*.py`.
 - Document new test commands in this file and keep them runnable from the repo root.
 
 ## Commit & Pull Request Guidelines
@@ -35,3 +37,14 @@
 
 - Provide `WAKATIME_API_KEY` via environment variables only; never commit secrets.
 - GitHub Actions expects the key in `secrets.WAKATIME_API_KEY`.
+- TruffleHog scans files with `--no-verification` so candidate credentials are not sent to verification endpoints.
+- Its local JSONL reader retains decoded findings at file level when the raw value is absent from the file and omits secret values from SARIF messages.
+
+## Offline scanner resource boundary
+
+Run `python3 -B .trunk/configs/tests/test_trufflehog_to_sarif.py` for the 17 command-line reader regressions.
+Source context is limited to 1 MiB plus a sentinel byte per read and at most eight cached files.
+Oversized, unreadable, binary or decoded-only findings retain file-level diagnostics instead of disappearing.
+Native Trunk paths and Unicode code-point columns are preserved.
+The large-source and multi-file regressions measure traced Python allocations on ASCII fixtures; they do not establish a universal process RSS or I/O timeout bound.
+Malformed scanner input fails the gate, and candidate credentials are never verified with a provider.
