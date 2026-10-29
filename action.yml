@@ -3,7 +3,7 @@ name: WakaTime SVG
 description: Generate WakaTime SVG cards from your stats and publish them to an output branch.
 inputs:
   WAKATIME_API_KEY:
-    description: Required. WakaTime API key.
+    description: Required. WakaTime personal OAuth token (`waka_tok_...`) from https://wakatime.com/oauth. API keys stop working for the WakaTime API on 2026-11-01.
     required: true
   GITHUB_TOKEN:
     description: Optional. Token for checkout/push; defaults to github.token.
