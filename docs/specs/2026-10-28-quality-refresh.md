@@ -14,10 +14,10 @@ Preserve Trunk CLI `1.25.0`, plugin ref `v1.11.0`, the configured runtimes and t
 Keep the Bandit test exclusion because the offline regression tests intentionally use assertions.
 Use `--no-verification` instead of `--only-verified` in TruffleHog's scan command.
 Preserve its JSON output, inherited SARIF handling, success codes and `copy_targets` sandbox.
-Replace the inherited JSON-to-SARIF reader with the reviewed local filesystem reader from `rn-typed-assets` so decoded findings remain visible when the raw value does not occur literally in the file.
+Replace the inherited JSON-to-SARIF reader with the reviewed shared maintenance filesystem reader so decoded findings remain visible when the raw value does not occur literally in the file.
 Use `direct_configs` to include the reader in Trunk's configuration and cache inputs.
 Keep its standard-library tests in `.trunk/configs/tests/` and run them in CI before dependency installation.
-Retain the existing `tests/**` Bandit exclusion; suppress only the observed subprocess import and invocation warnings on the two test lines that exercise the reader's command-line boundary without a shell.
+Retain the existing `tests/**` Bandit exclusion; suppress only the observed subprocess import and two invocation warnings on the three test lines that exercise the reader's command-line boundary without a shell.
 
 ## Acceptance
 
@@ -28,7 +28,7 @@ Retain the existing `tests/**` Bandit exclusion; suppress only the observed subp
 - Direct OSV scanning of `uv.lock` reports every resolved PyPI package, with package names and versions compared against the lockfile.
 - Coverage validation rejects a report with an omitted package before accepting the real report.
 - A synthetic fake canary reaches the configured TruffleHog JSON-to-SARIF reader without live credential verification; a clean fixture reports no finding.
-- The inherited reader fails the decoded-only regression before the local reader passes all 10 filesystem-reader tests.
+- The inherited reader fails the decoded-only regression before the local reader passes all 17 filesystem-reader tests.
 - Direct cached scanner/reader controls retain encoded and literal synthetic findings, omit their values from SARIF and keep clean input empty.
 - No API key, real WakaTime response or generated chart is needed for local verification.
 
@@ -43,7 +43,7 @@ An unauthenticated public-metadata request hit GitHub's API rate limit during th
 The retry supplies the existing GitHub credential only to the child process for public Action metadata while keeping automatic lookup disabled.
 No credential value is logged and no WakaTime API key or publishing path is used.
 The setup-uv references in CI and the public Action use the verified `v10.3.3` commit.
-The reader follow-up uses only the 10 standard-library reader tests, cached checks on the explicit changed files and offline scanner/reader controls while the shared heavy-job slot is unavailable.
+The reader follow-up uses only the 17 standard-library reader tests, cached checks on the explicit changed files and offline scanner/reader controls while the shared heavy-job slot is unavailable.
 The root agent runs the configured-Trunk controls, full scan and final review.
 
 ## Sources and Precedent
@@ -59,3 +59,12 @@ Retrieval freshness is unverified and the query was partial; no direct project-s
 
 Push and PR creation require explicit repository-specific approval.
 After approval, continue the requested hosted gates, merge, cleanup and memory recording.
+
+## Offline scanner resource boundary
+
+Run `python3 -B .trunk/configs/tests/test_trufflehog_to_sarif.py` for the 17 command-line reader regressions.
+Source context is limited to 1 MiB plus a sentinel byte per read and at most eight cached files.
+Oversized, unreadable, binary or decoded-only findings retain file-level diagnostics instead of disappearing.
+Native Trunk paths and Unicode code-point columns are preserved.
+The large-source and multi-file regressions measure traced Python allocations on ASCII fixtures; they do not establish a universal process RSS or I/O timeout bound.
+Malformed scanner input fails the gate, and candidate credentials are never verified with a provider.

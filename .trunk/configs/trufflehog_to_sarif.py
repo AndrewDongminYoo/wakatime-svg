@@ -1,27 +1,54 @@
 #!/usr/bin/env python3
-"""Convert offline TruffleHog filesystem JSONL without discarding findings."""
+"""Convert offline TruffleHog filesystem JSONL for Trunk's SARIF consumer."""
 
 import json
 import sys
 from pathlib import Path
 
+MAX_SOURCE_BYTES = 1024 * 1024
+MAX_CACHED_FILES = 8
 
-def physical_location(filename, secret, files, offsets):
+
+def physical_location(filename, secret, line_hint, files, offsets):
+    # Trunk 1.25.0 resolves this as a native path and drops URI-escaped paths.
     location = {"artifactLocation": {"uri": filename}}
+    if not secret:
+        return location
     if filename not in files:
+        if len(files) >= MAX_CACHED_FILES:
+            files.pop(next(iter(files)))
         try:
-            with Path(filename).open(encoding="utf-8", newline="") as source:
-                files[filename] = source.read()
-        except OSError, UnicodeError, ValueError:
+            with Path(filename).open("rb") as source:
+                data = source.read(MAX_SOURCE_BYTES + 1)
+            files[filename] = (
+                data.decode("utf-8") if len(data) <= MAX_SOURCE_BYTES else None
+            )
+        except (OSError, UnicodeError, ValueError):
             files[filename] = None
     content = files[filename]
-    if not secret or content is None:
+    if content is None:
         return location
 
-    key = (filename, secret)
-    position = content.find(secret, offsets.get(key, 0))
+    position = -1
+    if isinstance(line_hint, int) and not isinstance(line_hint, bool) and line_hint > 0:
+        line_start = 0
+        for _ in range(line_hint - 1):
+            newline = content.find("\n", line_start)
+            if newline < 0:
+                break
+            line_start = newline + 1
+        else:
+            candidate = content.find(secret, line_start)
+            line_end = content.find("\n", line_start)
+            if candidate >= 0 and (line_end < 0 or candidate <= line_end):
+                position = candidate
+
+    if position < 0:
+        key = (filename, secret)
+        position = content.find(secret, offsets.get(key, 0))
+        if position >= 0:
+            offsets[key] = position + 1
     if position >= 0:
-        offsets[key] = position + 1
         location["region"] = {
             "startLine": content.count("\n", 0, position) + 1,
             "startColumn": position - content.rfind("\n", 0, position),
@@ -50,7 +77,11 @@ def to_result(finding, files, offsets):
         "ruleId": detector,
         "message": {"text": "Secret detected"},
         "locations": [
-            {"physicalLocation": physical_location(filename, secret, files, offsets)}
+            {
+                "physicalLocation": physical_location(
+                    filename, secret, filesystem.get("line"), files, offsets
+                )
+            }
         ],
     }
 
@@ -76,7 +107,11 @@ def main():
                 "$schema": "https://json.schemastore.org/sarif-2.1.0.json",
                 "version": "2.1.0",
                 "runs": [
-                    {"tool": {"driver": {"name": "TruffleHog"}}, "results": results}
+                    {
+                        "tool": {"driver": {"name": "TruffleHog"}},
+                        "columnKind": "unicodeCodePoints",
+                        "results": results,
+                    }
                 ],
             }
         )

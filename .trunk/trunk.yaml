@@ -3,6 +3,9 @@
 version: 0.1
 cli:
   version: 1.25.0
+  options:
+    - commands: [ALL]
+      args: --monitor=false
 # Trunk provides extensibility via plugins. (https://docs.trunk.io/plugins)
 plugins:
   sources:
@@ -21,7 +24,7 @@ lint:
       commands:
         - name: lint
           # Detect candidates without sending credentials to verification endpoints.
-          run: trufflehog filesystem --json --fail --no-verification --no-update ${target}
+          run: trufflehog filesystem --json --fail --fail-on-scan-errors --no-verification --no-update ${target}
           direct_configs:
             - .trunk/configs/trufflehog_to_sarif.py
           parser:

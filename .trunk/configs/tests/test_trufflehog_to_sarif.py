@@ -3,7 +3,7 @@
 import base64
 import json
 import os
-import subprocess  # nosec B404 - CLI boundary coverage requires subprocess.
+import subprocess  # nosec B404 - Tests invoke only the local reader with a fixed interpreter.
 import sys
 import tempfile
 import unittest
@@ -39,7 +39,7 @@ class TruffleHogReaderTest(unittest.TestCase):
         }
 
     def invoke(self, input_text):
-        return subprocess.run(  # nosec B603 - Test-controlled argv; JSON uses stdin.
+        return subprocess.run(  # nosec B603 - Fixed interpreter and reader; no shell.
             [sys.executable, str(READER)],
             input=input_text,
             text=True,
@@ -52,8 +52,71 @@ class TruffleHogReaderTest(unittest.TestCase):
         self.assertEqual(completed.returncode, 0, completed.stderr)
         return json.loads(completed.stdout)["runs"][0]["results"]
 
+    def measured_results(self, findings):
+        wrapper = (
+            "import runpy, sys, tracemalloc\n"
+            "tracemalloc.start()\n"
+            "try:\n"
+            "    runpy.run_path(sys.argv[1], run_name='__main__')\n"
+            "finally:\n"
+            "    print('reader_peak_bytes=' + str(tracemalloc.get_traced_memory()[1]), file=sys.stderr)\n"
+        )
+        completed = subprocess.run(  # nosec B603 - Fixed trace wrapper; no shell.
+            [sys.executable, "-c", wrapper, str(READER)],
+            input="".join(json.dumps(item) + "\n" for item in findings),
+            text=True,
+            capture_output=True,
+            check=False,
+        )
+        self.assertEqual(completed.returncode, 0, completed.stderr)
+        peak = int(completed.stderr.rpartition("reader_peak_bytes=")[2].strip())
+        return json.loads(completed.stdout)["runs"][0]["results"], peak
+
     def location(self, result):
         return result["locations"][0]["physicalLocation"]
+
+    def test_unicode_code_point_columns_are_declared(self):
+        filename = self.fixture("unicode-columns.txt", "😀 synthetic-secret\n")
+        completed = self.invoke(json.dumps(self.finding(filename)) + "\n")
+        self.assertEqual(completed.returncode, 0, completed.stderr)
+        run = json.loads(completed.stdout)["runs"][0]
+        self.assertEqual(run.get("columnKind"), "unicodeCodePoints")
+        self.assertEqual(
+            self.location(run["results"][0])["region"],
+            {"startLine": 1, "startColumn": 3},
+        )
+
+    def test_reserved_filename_remains_a_native_trunk_path(self):
+        filename = self.fixture("space #50% 한글.txt", "synthetic-secret\n")
+        result = self.convert([self.finding(filename)])[0]
+        emitted = self.location(result)["artifactLocation"]["uri"]
+        self.assertEqual(emitted, filename)
+        self.assertTrue(Path(emitted).samefile(filename))
+
+    def test_large_source_keeps_a_file_level_finding(self):
+        filename = self.fixture(
+            "large.txt", "synthetic-secret\n" + "x" * (32 * 1024 * 1024)
+        )
+        results, peak = self.measured_results([self.finding(filename)])
+        self.assertLess(peak, 16 * 1024 * 1024)
+        self.assertEqual(len(results), 1)
+        location = self.location(results[0])
+        self.assertEqual(location["artifactLocation"]["uri"], filename)
+        self.assertNotIn("region", location)
+
+    def test_source_cache_memory_is_bounded_and_offsets_survive_eviction(self):
+        findings = []
+        filler = "x" * (768 * 1024)
+        for index in range(32):
+            prefix = "synthetic-secret\n" * (2 if index == 0 else 1)
+            filename = self.fixture(f"cache-{index}.txt", prefix + filler)
+            findings.append(self.finding(filename))
+        findings.append(findings[0])
+        results, peak = self.measured_results(findings)
+        self.assertLess(peak, 16 * 1024 * 1024)
+        self.assertEqual(len(results), len(findings))
+        self.assertEqual(self.location(results[0])["region"]["startLine"], 1)
+        self.assertEqual(self.location(results[-1])["region"]["startLine"], 2)
 
     def test_encoded_finding_survives_without_literal_location(self):
         raw = "synthetic-secret"
@@ -63,6 +126,38 @@ class TruffleHogReaderTest(unittest.TestCase):
         self.assertEqual(results[0]["ruleId"], "Github")
         self.assertEqual(self.location(results[0])["artifactLocation"]["uri"], filename)
         self.assertNotIn("region", self.location(results[0]))
+
+    def test_reported_source_line_selects_the_matching_occurrence(self):
+        filename = self.fixture(
+            "reported.txt", "header\nsynthetic-secret\nspacer\nsynthetic-secret\n"
+        )
+        finding = self.finding(filename)
+        finding["SourceMetadata"]["Data"]["Filesystem"]["line"] = 4
+        results = self.convert([finding])
+        self.assertEqual(self.location(results[0])["region"]["startLine"], 4)
+        self.assertEqual(self.location(results[0])["region"]["startColumn"], 1)
+
+    def test_reported_source_lines_can_arrive_out_of_order(self):
+        filename = self.fixture(
+            "reported-order.txt", "header\nsynthetic-secret\nspacer\nsynthetic-secret\n"
+        )
+        findings = [self.finding(filename), self.finding(filename)]
+        for index, line in enumerate([4, 2]):
+            findings[index]["SourceMetadata"]["Data"]["Filesystem"]["line"] = line
+        results = self.convert(findings)
+        self.assertEqual(
+            [self.location(result)["region"]["startLine"] for result in results], [4, 2]
+        )
+
+    def test_invalid_or_wrong_reported_line_keeps_literal_fallback(self):
+        filename = self.fixture("reported-invalid.txt", "header\nsynthetic-secret\n")
+        for line in [None, True, False, 0, -1, "2", 99, 1, {}]:
+            with self.subTest(line=line):
+                finding = self.finding(filename)
+                finding["SourceMetadata"]["Data"]["Filesystem"]["line"] = line
+                result = self.convert([finding])[0]
+                self.assertEqual(self.location(result)["region"]["startLine"], 2)
+                self.assertEqual(self.location(result)["region"]["startColumn"], 1)
 
     def test_literal_location_is_one_based(self):
         filename = self.fixture("literal.txt", "header\nprefix synthetic-secret\n")

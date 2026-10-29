@@ -39,3 +39,12 @@
 - GitHub Actions expects the key in `secrets.WAKATIME_API_KEY`.
 - TruffleHog scans files with `--no-verification` so candidate credentials are not sent to verification endpoints.
 - Its local JSONL reader retains decoded findings at file level when the raw value is absent from the file and omits secret values from SARIF messages.
+
+## Offline scanner resource boundary
+
+Run `python3 -B .trunk/configs/tests/test_trufflehog_to_sarif.py` for the 17 command-line reader regressions.
+Source context is limited to 1 MiB plus a sentinel byte per read and at most eight cached files.
+Oversized, unreadable, binary or decoded-only findings retain file-level diagnostics instead of disappearing.
+Native Trunk paths and Unicode code-point columns are preserved.
+The large-source and multi-file regressions measure traced Python allocations on ASCII fixtures; they do not establish a universal process RSS or I/O timeout bound.
+Malformed scanner input fails the gate, and candidate credentials are never verified with a provider.
