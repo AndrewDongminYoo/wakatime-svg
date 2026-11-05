@@ -24,7 +24,7 @@
 
 Keep command logs, exit codes, package metadata and coverage validation in the visible review directory outside the repository.
 Preserve the original author-unknown staged Trunk patch without changing the index.
-Publication remains a separate operator decision.
+Publication remains a separate decision.
 
 ## Security Reader Follow-up
 
