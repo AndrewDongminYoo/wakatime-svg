@@ -2,7 +2,7 @@
 # To learn more about the format of this file, see https://docs.trunk.io/reference/trunk-yaml
 version: 0.1
 cli:
-  version: 1.25.0
+  version: 1.29.0
   options:
     - commands: [ALL]
       args: --monitor=false
@@ -20,6 +20,10 @@ runtimes:
 # This is the section where you manage your linters. (https://docs.trunk.io/check/configuration)
 lint:
   definitions:
+    - name: pinact
+      commands:
+        - name: upgrade
+          enabled: true
     - name: trufflehog
       commands:
         - name: lint
@@ -35,11 +39,6 @@ lint:
       filenames: [action.yml]
     - name: lockfile
       filenames: [uv.lock]
-  ignore:
-    # Tests assert on purpose; bandit's B101 is noise there.
-    - linters: [bandit]
-      paths:
-        - tests/**
   disabled:
     - grype
     - svgo
@@ -47,19 +46,23 @@ lint:
     - actionlint@1.7.12
     - bandit@1.9.4
     - black@26.10.1
-    - checkov@3.3.30
+    - checkov@3.4.3
     - git-diff-check
     - isort@9.0.2
     - markdownlint@0.50.0
     - osv-scanner@2.7.0
     - oxipng@10.2.1
-    - pinact@4.1.1!:
-        commands: [lint, upgrade]
+    - pinact@4.1.1!
     - prettier@3.9.10
-    - ruff@0.17.3
+    - ruff@0.17.4
     - taplo@0.10.0
-    - trufflehog@3.99.7
+    - trufflehog@3.99.8
     - yamllint@1.38.0
+  ignore:
+    # Tests assert on purpose; bandit's B101 is noise there.
+    - linters: [bandit]
+      paths:
+        - tests/**
 actions:
   enabled:
     - trunk-announce
